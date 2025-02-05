@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MU Transit Admin Login</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('img/background.png') no-repeat center center/cover;
+            font-family: Arial, sans-serif;
+        }
+        .login-container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .logo {
+            width: 150px;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #008D62;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            border: 2px solid #008D62;
+            border-radius: 50px;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+        .input-group input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 5px;
+            -webkit-text-security: disc;
+        }
+        .login-btn {
+            background: #008D62;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0px 4px 10px rgba(0, 141, 98, 0.3);
+            transition: background 0.3s ease;
+        }
+        .login-btn:hover {
+            background: #006f4e;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="img/mu_logo.png" alt="Marwadi University Logo" class="logo">
+        <div class="title">MU Transit</div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Enter Password">
+        </div>
+        <button class="login-btn">Login</button>
+    </div>
+</body>
+</html>

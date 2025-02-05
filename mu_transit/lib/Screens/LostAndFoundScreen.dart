@@ -15,7 +15,7 @@ class _LostAndFoundScreenState extends State<LostAndFoundScreen> {
       child: Scaffold(
         appBar: AppBar(
           elevation: 0, // Removes unnecessary space
-          backgroundColor: const Color(0xFF008D62),
+          // backgroundColor: const Color(0xFF008D62),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Lost Items'),
@@ -53,17 +53,19 @@ class LostItemsTab extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Form for Lost Item wrapped in Cards
-              _buildCardField("Item Name"),
+              _buildCardField("Item Name", true),
               const SizedBox(height: 16),
-              _buildCardField("Item Description"),
+              _buildCardField("Item Description", false),
               const SizedBox(height: 16),
-              _buildCardField("Route No./Bus No."),
+              _buildCardField("Route No./Bus No.", true),
               const SizedBox(height: 16),
-              _buildCardField("Lost Location"),
+              _buildCardField("Lost Location", false),
               const SizedBox(height: 16),
-              _buildCardField("Contact Information"),
+              _buildCardField("Contact Information", true),
               const SizedBox(height: 16),
-              _buildCardField("Date and Time of Loss"),
+              _buildCardField("Date and Time of Loss", false),
+              const SizedBox(height: 16),
+              _buildCardField("Add Photo", false), // Added photo upload field
               const SizedBox(height: 32),
 
               ElevatedButton(
@@ -72,7 +74,7 @@ class LostItemsTab extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF008D62),
-                  padding: const EdgeInsets.symmetric(vertical: 15.0),
+                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0), // Increased width of button
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),
@@ -89,7 +91,7 @@ class LostItemsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildCardField(String labelText) {
+  Widget _buildCardField(String labelText, bool isRequired) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(
@@ -98,7 +100,7 @@ class LostItemsTab extends StatelessWidget {
       child: TextField(
         style: const TextStyle(fontWeight: FontWeight.bold), // Bold text in input
         decoration: InputDecoration(
-          labelText: labelText,
+          labelText: labelText + (isRequired ? " *" : ""), // Add * for compulsory fields
           labelStyle: const TextStyle(fontWeight: FontWeight.bold), // Bold label
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.0),
@@ -129,17 +131,19 @@ class FoundItemsTab extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Form for Found Item wrapped in Cards
-              _buildCardField("Item Name"),
+              _buildCardField("Item Name", true),
               const SizedBox(height: 16),
-              _buildCardField("Item Description"),
+              _buildCardField("Item Description", false),
               const SizedBox(height: 16),
-              _buildCardField("Route No./Bus No."),
+              _buildCardField("Route No./Bus No.", true),
               const SizedBox(height: 16),
-              _buildCardField("Found Location"),
+              _buildCardField("Found Location", false),
               const SizedBox(height: 16),
-              _buildCardField("Contact Information"),
+              _buildCardField("Contact Information", true),
               const SizedBox(height: 16),
-              _buildCardField("Date and Time of Finding"),
+              _buildCardField("Date and Time of Finding", false),
+              const SizedBox(height: 16),
+              _buildCardField("Add Photo", false), // Added photo upload field
               const SizedBox(height: 32),
 
               ElevatedButton(
@@ -148,7 +152,7 @@ class FoundItemsTab extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF008D62),
-                  padding: const EdgeInsets.symmetric(vertical: 15.0),
+                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0), // Increased width of button
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
                   ),
@@ -165,7 +169,7 @@ class FoundItemsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildCardField(String labelText) {
+  Widget _buildCardField(String labelText, bool isRequired) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(
@@ -174,7 +178,7 @@ class FoundItemsTab extends StatelessWidget {
       child: TextField(
         style: const TextStyle(fontWeight: FontWeight.bold), // Bold text in input
         decoration: InputDecoration(
-          labelText: labelText,
+          labelText: labelText + (isRequired ? " *" : ""), // Add * for compulsory fields
           labelStyle: const TextStyle(fontWeight: FontWeight.bold), // Bold label
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12.0),
