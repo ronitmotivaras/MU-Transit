@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MU Transit - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            background-color: #212529;
+            padding-top: 20px;
+            color: white;
+            overflow-y: auto;
+        }
+        .sidebar h3 {
+            text-align: center;
+        }
+        .sidebar a {
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #343a40;
+        }
+        .content {
+            flex-grow: 1;
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px);
+            background-color: white;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .edit-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+        }
+        .edit-input:focus {
+            outline: none;
+            background-color: #f8f9fa;
+        }
+        .disabled-input {
+            pointer-events: none;
+            background: transparent;
+            border: none;
+            text-align: center;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .add-bus-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .add-bus-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3>MU Transit</h3>
+        <a href="#"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+        <a href="#busMenu" data-bs-toggle="collapse"><i class="fas fa-bus"></i> <span>Bus Management</span></a>
+        <div class="collapse" id="busMenu">
+            <a href="#" class="ps-5">Bus List</a>
+            <a href="#" class="ps-5">Bus Allocation</a>
+        </div>
+        <a href="#userMenu" data-bs-toggle="collapse"><i class="fas fa-users"></i> <span>User Management</span></a>
+        <div class="collapse" id="userMenu">
+            <a href="#" class="ps-5">Student List</a>
+            <a href="#" class="ps-5">Faculty Bus</a>
+        </div>
+        <a href="#operationsMenu" data-bs-toggle="collapse"><i class="fas fa-cogs"></i> <span>Operations</span></a>
+        <div class="collapse" id="operationsMenu">
+            <a href="#" class="ps-5">Routes</a>
+            <a href="#" class="ps-5">Timings</a>
+            <a href="#" class="ps-5">Driver Management</a>
+            <a href="#" class="ps-5">Lost & Found</a>
+        </div>
+        <a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a>
+    </div>
+    
+    <!-- Bus List Table -->
+    <div class="content">
+        <!-- Header section with Bus List and Add Bus button -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Bus List</h2>
+            <button class="add-bus-btn">
+                <i class="fas fa-plus"></i> Add Bus
+            </button>
+        </div>
+
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Bus No</th>
+                    <th>Bus Route</th>
+                    <th>Bus Time</th>
+                    <th>Shift</th>
+                    <th>Driver Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="busTable">
+                <tr>
+                    <td><input type="text" class="disabled-input" value="101"></td>
+                    <td><input type="text" class="disabled-input" value="North Campus - Main Gate"></td>
+                    <td><input type="text" class="disabled-input" value="08:30 AM"></td>
+                    <td><input type="text" class="disabled-input" value="Morning"></td>
+                    <td><input type="text" class="disabled-input" value="John Doe"></td>
+                    <td class="btn-group">
+                        <button class="btn btn-sm btn-warning edit-btn" onclick="toggleEdit(this)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="disabled-input" value="102"></td>
+                    <td><input type="text" class="disabled-input" value="South Campus - Library"></td>
+                    <td><input type="text" class="disabled-input" value="09:00 AM"></td>
+                    <td><input type="text" class="disabled-input" value="Morning"></td>
+                    <td><input type="text" class="disabled-input" value="Jane Smith"></td>
+                    <td class="btn-group">
+                        <button class="btn btn-sm btn-warning edit-btn" onclick="toggleEdit(this)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to toggle edit mode
+        function toggleEdit(button) {
+            let row = button.closest("tr");
+            let inputs = row.querySelectorAll("input");
+
+            if (button.innerHTML.includes("edit")) {
+                // Enable editing
+                inputs.forEach(input => {
+                    input.classList.remove("disabled-input");
+                    input.style.border = "1px solid #ced4da"; // Show input border
+                });
+                button.innerHTML = '<i class="fas fa-save"></i>'; // Change icon to "Save"
+                button.classList.remove("btn-warning");
+                button.classList.add("btn-success");
+            } else {
+                // Disable editing
+                inputs.forEach(input => {
+                    input.classList.add("disabled-input");
+                    input.style.border = "none"; // Hide input border
+                });
+                button.innerHTML = '<i class="fas fa-edit"></i>'; // Change icon back to "Edit"
+                button.classList.remove("btn-success");
+                button.classList.add("btn-warning");
+            }
+        }
+
+        // Function to delete a row
+        function deleteRow(button) {
+            let row = button.closest("tr");
+            row.remove();
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
