@@ -1,14 +1,10 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:mu_transit/Screens/LoginScreen.dart';
 
-import 'Screens/Dashboard.dart';
-import 'firebase_options.dart';
+import 'Screens/HomeScreen.dart';
+import 'Screens/loginScreen.dart';
 
-void main() async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
+void main() {
   runApp(const MyApp());
 }
 
@@ -40,7 +36,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const DashboardScreen(),
+      home: const LoginScreen(),
     );
   }
 }

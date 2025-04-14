@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class SeatAvailabelScreen extends StatefulWidget {
   const SeatAvailabelScreen({super.key});
@@ -10,13 +10,6 @@ class SeatAvailabelScreen extends StatefulWidget {
 class _SeatAvailabelScreenState extends State<SeatAvailabelScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: const Center(
-        child: Text(
-          "Seat Availability Info",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
+    return const Placeholder();
   }
 }

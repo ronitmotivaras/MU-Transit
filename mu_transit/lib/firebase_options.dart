@@ -41,48 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBoOFtyz8Eq7lqQPB4AY8dj2LaPxZHQyMk',
-    appId: '1:110307106423:web:b16865535bad53bd0e7072',
-    messagingSenderId: '110307106423',
-    projectId: 'mu-transit',
-    authDomain: 'mu-transit.firebaseapp.com',
-    storageBucket: 'mu-transit.firebasestorage.app',
-    measurementId: 'G-YCENFFYNYM',
+    apiKey: 'AIzaSyAB9TdCF8aVdE_cdrNQEYLHe0RSQhR2ogA',
+    appId: '1:749747574328:web:a69c8ca7542c6a261438cd',
+    messagingSenderId: '749747574328',
+    projectId: 'mu-transit-51918',
+    authDomain: 'mu-transit-51918.firebaseapp.com',
+    storageBucket: 'mu-transit-51918.firebasestorage.app',
+    measurementId: 'G-S45TVFBDC4',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyASF5xsdsPM7v_xXNZyjK4EpMKpL0VbBd4',
-    appId: '1:110307106423:android:4d28567e881d478b0e7072',
-    messagingSenderId: '110307106423',
-    projectId: 'mu-transit',
-    storageBucket: 'mu-transit.firebasestorage.app',
+    apiKey: 'AIzaSyCsXoFUFnVmqKktBOp16WWDeEiOEaw6r2U',
+    appId: '1:749747574328:android:3b3ee90a6172194d1438cd',
+    messagingSenderId: '749747574328',
+    projectId: 'mu-transit-51918',
+    storageBucket: 'mu-transit-51918.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCTw2jRO68hgaQnLUPx3RZ6dop8BBNJOlo',
-    appId: '1:110307106423:ios:3d93cfe866d653fe0e7072',
-    messagingSenderId: '110307106423',
-    projectId: 'mu-transit',
-    storageBucket: 'mu-transit.firebasestorage.app',
+    apiKey: 'AIzaSyAi6u4LbsbmlUil9NY1I8cwk32Mi5lwX3k',
+    appId: '1:749747574328:ios:86bfc6bcc0a67d4f1438cd',
+    messagingSenderId: '749747574328',
+    projectId: 'mu-transit-51918',
+    storageBucket: 'mu-transit-51918.firebasestorage.app',
     iosBundleId: 'com.example.muTransit',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCTw2jRO68hgaQnLUPx3RZ6dop8BBNJOlo',
-    appId: '1:110307106423:ios:3d93cfe866d653fe0e7072',
-    messagingSenderId: '110307106423',
-    projectId: 'mu-transit',
-    storageBucket: 'mu-transit.firebasestorage.app',
+    apiKey: 'AIzaSyAi6u4LbsbmlUil9NY1I8cwk32Mi5lwX3k',
+    appId: '1:749747574328:ios:86bfc6bcc0a67d4f1438cd',
+    messagingSenderId: '749747574328',
+    projectId: 'mu-transit-51918',
+    storageBucket: 'mu-transit-51918.firebasestorage.app',
     iosBundleId: 'com.example.muTransit',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBoOFtyz8Eq7lqQPB4AY8dj2LaPxZHQyMk',
-    appId: '1:110307106423:web:1dfbdd3e3c6016c40e7072',
-    messagingSenderId: '110307106423',
-    projectId: 'mu-transit',
-    authDomain: 'mu-transit.firebaseapp.com',
-    storageBucket: 'mu-transit.firebasestorage.app',
-    measurementId: 'G-MBGZ0SQHG3',
+    apiKey: 'AIzaSyAB9TdCF8aVdE_cdrNQEYLHe0RSQhR2ogA',
+    appId: '1:749747574328:web:2df0ecc35a5a16f91438cd',
+    messagingSenderId: '749747574328',
+    projectId: 'mu-transit-51918',
+    authDomain: 'mu-transit-51918.firebaseapp.com',
+    storageBucket: 'mu-transit-51918.firebasestorage.app',
+    measurementId: 'G-EMRRDV4Y8M',
   );
 }
