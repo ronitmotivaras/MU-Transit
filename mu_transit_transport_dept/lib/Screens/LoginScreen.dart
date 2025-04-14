@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'homeScreen.dart'; // Update the path as per your project structure
+
 import 'package:firebase_auth/firebase_auth.dart';
+
 
 
 class LoginScreen extends StatefulWidget {
@@ -30,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.account_circle, size: 100, color: Colors.teal),
                 const SizedBox(height: 16),
                 const Text(
-                  "Welcome Back",
+                  "Welcome Back Admin",
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
                 const SizedBox(height: 8),
@@ -44,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: _inputDecoration("GR No.", Icons.email),
+                  decoration: _inputDecoration("Mobile No.", Icons.email),
                 ),
                 const SizedBox(height: 15),
 
@@ -100,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                        MaterialPageRoute(builder: (_) => const Homescreen()),
                       );
                     },
                     child: const Text(

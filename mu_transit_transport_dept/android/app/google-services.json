@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "749747574328",
+    "project_id": "mu-transit-51918",
+    "storage_bucket": "mu-transit-51918.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:749747574328:android:3b3ee90a6172194d1438cd",
+        "android_client_info": {
+          "package_name": "com.example.mu_transit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsXoFUFnVmqKktBOp16WWDeEiOEaw6r2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:749747574328:android:677214777bde69621438cd",
+        "android_client_info": {
+          "package_name": "com.example.mu_transit_transport_dept"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsXoFUFnVmqKktBOp16WWDeEiOEaw6r2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
