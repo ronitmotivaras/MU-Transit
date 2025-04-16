@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'loginScreen.dart'; // Update the path as needed
 
-class Profilscreen extends StatelessWidget {
-  const Profilscreen({super.key});
+import 'HomeScreen.dart';
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,7 @@ class Profilscreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(builder: (context) => const HomeScreen()),
                       );
                     },
                     child: const Text("Logout", style: TextStyle(color: Colors.teal)),

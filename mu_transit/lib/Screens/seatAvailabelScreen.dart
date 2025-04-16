@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 
-class SeatAvailabelScreen extends StatefulWidget {
-  const SeatAvailabelScreen({super.key});
+class seatAvailabelScreen extends StatefulWidget {
+  const seatAvailabelScreen({super.key});
 
   @override
-  State<SeatAvailabelScreen> createState() => _SeatAvailabelScreenState();
+  State<seatAvailabelScreen> createState() => _seatAvailabelScreenState();
 }
 
-class _SeatAvailabelScreenState extends State<SeatAvailabelScreen> {
+class _seatAvailabelScreenState extends State<seatAvailabelScreen> {
   @override
   Widget build(BuildContext context) {
     return const Placeholder();

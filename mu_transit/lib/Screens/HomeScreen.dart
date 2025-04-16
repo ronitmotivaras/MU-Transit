@@ -1,9 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mu_transit/Screens/profilScreen.dart';
 
-import 'LostandFound.dart';
-import 'locationScreen.dart';
-import 'seatAvailabelScreen.dart';
+import 'LocationScreen.dart';
+import 'LostandFoundScreen.dart';
+import 'ProfileScreen.dart';
+import 'SeatAvailabelScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Navigate to the ProfileScreen when the profile icon is clicked
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const Profilscreen()),
+                        MaterialPageRoute(builder: (context) => ProfileScreen()),
                       );
                     },
                   ),
@@ -179,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _bottomNavItem(Icons.home_rounded, "Home", 0),
-          _bottomNavItem(Icons.location_on, "Bus Location", 1),
+            _bottomNavItem(Icons.location_on, "Bus Location", 1),
             _bottomNavItem(Icons.airline_seat_recline_normal_rounded, "Seats", 2),
             _bottomNavItem(Icons.search_rounded, "Lost & Found", 3),
           ],
@@ -201,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Navigate to the LocationScreen when "Bus Location" is clicked
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const LocationScreen()),
+            MaterialPageRoute(builder: (context) => const locationScreen()),
           );
         }
 
@@ -210,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Navigate to the SeatAvailableScreen when "Seats" is clicked
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const SeatAvailabelScreen()),
+            MaterialPageRoute(builder: (context) => const seatAvailabelScreen()),
           );
         }
 
@@ -219,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Navigate to the LostAndFoundScreen when "Lost & Found" is clicked
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const LostandfoundScreen()),
+            MaterialPageRoute(builder: (context) => const lostandFoundScreen()),
           );
         }
 

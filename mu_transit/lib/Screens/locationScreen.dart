@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 
-class LocationScreen extends StatefulWidget {
-  const LocationScreen({super.key});
+class locationScreen extends StatefulWidget {
+  const locationScreen({super.key});
 
   @override
-  State<LocationScreen> createState() => _LocationScreenState();
+  State<locationScreen> createState() => _locationScreenState();
 }
 
-class _LocationScreenState extends State<LocationScreen> {
+class _locationScreenState extends State<locationScreen> {
   @override
   Widget build(BuildContext context) {
     return const Placeholder();
