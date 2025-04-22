@@ -112,6 +112,11 @@
     .is-invalid + .invalid-feedback {
       display: block;
     }
+    /* Fix for the view modal to show full address */
+    .route-details td {
+      white-space: normal;
+      word-wrap: break-word;
+    }
   </style>
 </head>
 <body>
@@ -132,9 +137,11 @@
     <table class="table table-bordered table-striped text-center">
       <thead class="table-dark">
         <tr>
+          <th width="7%">Sr. No</th>
           <th>City</th>
-          <th>Address</th>
-          <th>Bus Stop</th>
+          <th>Routes</th>
+          <th>Time</th>
+          <th>Travel Time</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -162,14 +169,28 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label for="busStop">Bus Stop:</label>
-              <input type="text" class="form-control" id="busStop" required>
+              <label for="route">Route:</label>
+              <input type="text" class="form-control" id="route" required>
             </div>
           </div>
         </div>
         <div class="form-group">
           <label for="address">Address:</label>
           <textarea class="form-control" id="address" rows="2" required></textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="time">Time:</label>
+              <input type="time" class="form-control" id="time" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="travelTime">Travel Time (minutes):</label>
+              <input type="number" class="form-control" id="travelTime" min="1" required>
+            </div>
+          </div>
         </div>
         <div class="d-flex justify-content-end mt-3">
           <button type="button" class="btn btn-secondary me-2" onclick="closeAddRouteModal()">Cancel</button>
@@ -198,14 +219,28 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label for="editBusStop">Bus Stop:</label>
-              <input type="text" class="form-control" id="editBusStop" required>
+              <label for="editRoute">Route:</label>
+              <input type="text" class="form-control" id="editRoute" required>
             </div>
           </div>
         </div>
         <div class="form-group">
           <label for="editAddress">Address:</label>
           <textarea class="form-control" id="editAddress" rows="2" required></textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="editTime">Time:</label>
+              <input type="time" class="form-control" id="editTime" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="editTravelTime">Travel Time (minutes):</label>
+              <input type="number" class="form-control" id="editTravelTime" min="1" required>
+            </div>
+          </div>
         </div>
         <div class="d-flex justify-content-end mt-3">
           <button type="button" class="btn btn-secondary me-2" onclick="closeEditRouteModal()">Cancel</button>
@@ -233,8 +268,16 @@
             <td id="viewAddress"></td>
           </tr>
           <tr>
-            <th>Bus Stop</th>
-            <td id="viewBusStop"></td>
+            <th>Route</th>
+            <td id="viewRoute"></td>
+          </tr>
+          <tr>
+            <th>Time</th>
+            <td id="viewTime"></td>
+          </tr>
+          <tr>
+            <th>Travel Time</th>
+            <td id="viewTravelTime"></td>
           </tr>
         </table>
       </div>
@@ -268,23 +311,34 @@
     function loadRouteData() {
       const table = document.getElementById("routeTable");
       table.innerHTML = '';
+      let serialNum = 1;
       db.ref("routes").once("value", function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           const key = childSnapshot.key;
           const data = childSnapshot.val();
-          appendRouteRow(data, key);
+          appendRouteRow(data, key, serialNum);
+          serialNum++;
         });
       });
     }
 
-    function appendRouteRow(data, key) {
+    function appendRouteRow(data, key, serialNum) {
       const table = document.getElementById("routeTable");
       const row = document.createElement("tr");
       row.setAttribute("data-key", key);
+      
+      // Format time for display
+      const displayTime = data.time || 'N/A';
+      
+      // Format travel time for display
+      const travelTime = data.travelTime ? data.travelTime + ' minutes' : 'N/A';
+      
       row.innerHTML = `
+        <td>${serialNum}</td>
         <td>${data.city}</td>
-        <td>${data.address}</td>
-        <td>${data.busStop}</td>
+        <td>${data.route}</td>
+        <td>${displayTime}</td>
+        <td>${travelTime}</td>
         <td class="btn-group">
           <button class="btn btn-sm btn-info" onclick="openViewRouteModal('${key}')">
             <i class="fas fa-eye"></i> View
@@ -356,7 +410,9 @@
         const data = snapshot.val();
         document.getElementById("editCity").value = data.city || '';
         document.getElementById("editAddress").value = data.address || '';
-        document.getElementById("editBusStop").value = data.busStop || '';
+        document.getElementById("editRoute").value = data.route || '';
+        document.getElementById("editTime").value = data.time || '';
+        document.getElementById("editTravelTime").value = data.travelTime || '';
       });
     }
 
@@ -373,8 +429,14 @@
       db.ref("routes/" + key).once("value", function(snapshot) {
         const data = snapshot.val();
         document.getElementById("viewCity").textContent = data.city || '';
-        document.getElementById("viewAddress").textContent = data.address || '';
-        document.getElementById("viewBusStop").textContent = data.busStop || '';
+        
+        // Display full address without truncation
+        const addressElement = document.getElementById("viewAddress");
+        addressElement.textContent = data.address || '';
+        
+        document.getElementById("viewRoute").textContent = data.route || '';
+        document.getElementById("viewTime").textContent = data.time || 'N/A';
+        document.getElementById("viewTravelTime").textContent = data.travelTime ? data.travelTime + ' minutes' : 'N/A';
       });
     }
 
@@ -399,10 +461,12 @@
     function saveRouteData() {
       const city = document.getElementById("city").value.trim();
       const address = document.getElementById("address").value.trim();
-      const busStop = document.getElementById("busStop").value.trim();
+      const route = document.getElementById("route").value.trim();
+      const time = document.getElementById("time").value.trim();
+      const travelTime = document.getElementById("travelTime").value.trim();
 
       // Basic validation
-      if (!city || !address || !busStop) {
+      if (!city || !address || !route || !time || !travelTime) {
         alert("Please fill all fields");
         return;
       }
@@ -410,7 +474,9 @@
       const routeData = {
         city: city,
         address: address,
-        busStop: busStop
+        route: route,
+        time: time,
+        travelTime: travelTime
       };
 
       const newRouteRef = db.ref("routes").push();
@@ -418,7 +484,8 @@
         if (!error) {
           alert("Route saved successfully!");
           closeAddRouteModal();
-          appendRouteRow(routeData, newRouteRef.key);
+          // Reload all data to ensure proper serial numbers
+          loadRouteData();
         } else {
           alert("Error saving route.");
         }
@@ -442,10 +509,12 @@
       const key = document.getElementById("editRouteKey").value;
       const city = document.getElementById("editCity").value.trim();
       const address = document.getElementById("editAddress").value.trim();
-      const busStop = document.getElementById("editBusStop").value.trim();
+      const route = document.getElementById("editRoute").value.trim();
+      const time = document.getElementById("editTime").value.trim();
+      const travelTime = document.getElementById("editTravelTime").value.trim();
 
       // Basic validation
-      if (!city || !address || !busStop) {
+      if (!city || !address || !route || !time || !travelTime) {
         alert("Please fill all fields");
         return;
       }
@@ -453,23 +522,17 @@
       const updatedData = {
         city: city,
         address: address,
-        busStop: busStop
+        route: route,
+        time: time,
+        travelTime: travelTime
       };
 
       db.ref("routes/" + key).set(updatedData, function (error) {
         if (!error) {
           alert("Route updated successfully!");
           closeEditRouteModal();
-          // Update the row in the table
-          const row = document.querySelector(`tr[data-key="${key}"]`);
-          if (row) {
-            row.cells[0].textContent = city;
-            row.cells[1].textContent = address;
-            row.cells[2].textContent = busStop;
-          } else {
-            // If row not found, reload all data
-            loadRouteData();
-          }
+          // Reload all data to ensure proper serial numbers
+          loadRouteData();
         } else {
           alert("Error updating route.");
         }
@@ -487,8 +550,9 @@
       if (key) {
         db.ref("routes/" + key).remove(function (error) {
           if (!error) {
-            row.remove();
             alert("Route deleted successfully!");
+            // Reload all data to update serial numbers
+            loadRouteData();
           } else {
             alert("Error deleting from database.");
           }

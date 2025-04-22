@@ -132,10 +132,10 @@
     <table class="table table-bordered table-striped text-center">
       <thead class="table-dark">
         <tr>
+          <th width="8%">Sr No.</th>
           <th>Driver ID</th>
           <th>Driver Name</th>
           <th>City</th>
-          <th>Address</th>
           <th>Phone No.</th>
           <th>Actions</th>
         </tr>
@@ -158,8 +158,9 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="driverId">Driver ID:</label>
-              <input type="text" class="form-control" id="driverId" required maxlength="4" readonly>
-              <small class="text-muted">Auto-generated ID</small>
+              <input type="text" class="form-control" id="driverId" required maxlength="4">
+              <div class="invalid-feedback">This Driver ID already exists.</div>
+              <small class="text-muted">Format: D### (e.g., D001)</small>
             </div>
           </div>
           <div class="col-md-6">
@@ -311,6 +312,7 @@
       loadDriverData();
       
       // Add input validation listeners
+      document.getElementById("driverId").addEventListener("input", validateDriverId);
       document.getElementById("driverName").addEventListener("input", validateDriverName);
       document.getElementById("phoneNo").addEventListener("input", validatePhoneNo);
       
@@ -318,27 +320,33 @@
       document.getElementById("editPhoneNo").addEventListener("input", validateEditPhoneNo);
     };
 
-    function loadDriverData() {
+    async function loadDriverData() {
       const table = document.getElementById("driverTable");
       table.innerHTML = '';
-      db.ref("drivers").once("value", function (snapshot) {
+      let srNo = 1;
+      
+      try {
+        const snapshot = await db.ref("drivers").once("value");
         snapshot.forEach(function (childSnapshot) {
           const key = childSnapshot.key;
           const data = childSnapshot.val();
-          appendDriverRow(data, key);
+          appendDriverRow(data, key, srNo);
+          srNo++;
         });
-      });
+      } catch (error) {
+        console.error("Error loading driver data:", error);
+      }
     }
 
-    function appendDriverRow(data, key) {
+    function appendDriverRow(data, key, srNo) {
       const table = document.getElementById("driverTable");
       const row = document.createElement("tr");
       row.setAttribute("data-key", key);
       row.innerHTML = `
+        <td>${srNo}</td>
         <td>${data.driverId}</td>
         <td>${data.driverName}</td>
         <td>${data.city}</td>
-        <td>${data.address}</td>
         <td>${data.phoneNo}</td>
         <td class="btn-group">
           <button class="btn btn-sm btn-info" onclick="openViewDriverModal('${key}')">
@@ -354,33 +362,46 @@
       table.appendChild(row);
     }
     
-    // Get the next driver ID
-    async function getNextDriverId() {
-      let highestNum = 0;
-      
+    // Check if driver ID already exists
+    async function checkDriverIdExists(driverId) {
       try {
-        const snapshot = await db.ref("drivers").once("value");
-        snapshot.forEach(function(childSnapshot) {
-          const data = childSnapshot.val();
-          if (data.driverId && data.driverId.startsWith('D')) {
-            // Extract the numeric part
-            const numPart = parseInt(data.driverId.substring(1), 10);
-            if (!isNaN(numPart) && numPart > highestNum) {
-              highestNum = numPart;
-            }
-          }
-        });
-        
-        // Increment and format with leading zeros
-        highestNum++;
-        return 'D' + String(highestNum).padStart(3, '0');
+        const snapshot = await db.ref("drivers").orderByChild("driverId").equalTo(driverId).once("value");
+        return snapshot.exists();
       } catch (error) {
-        console.error("Error getting next driver ID:", error);
-        return 'D001'; // Default if error occurs
+        console.error("Error checking driver ID:", error);
+        return false;
       }
     }
     
     // Validation functions
+    async function validateDriverId() {
+      const idInput = document.getElementById("driverId");
+      const value = idInput.value.trim();
+      
+      // Format validation
+      const formatValid = /^D\d{3}$/.test(value);
+      if (value && !formatValid) {
+        idInput.classList.add("is-invalid");
+        idInput.nextElementSibling.textContent = "Driver ID must be in format D### (e.g., D001)";
+        return false;
+      }
+      
+      // Check if ID exists
+      if (formatValid) {
+        const exists = await checkDriverIdExists(value);
+        if (exists) {
+          idInput.classList.add("is-invalid");
+          idInput.nextElementSibling.textContent = "This Driver ID already exists.";
+          return false;
+        } else {
+          idInput.classList.remove("is-invalid");
+          return true;
+        }
+      }
+      
+      return false;
+    }
+    
     function validateDriverName() {
       const nameInput = document.getElementById("driverName");
       const value = nameInput.value.trim();
@@ -437,18 +458,20 @@
       }
     }
 
-    // Open Add Driver Modal with auto-generated ID
-    async function openAddDriverModal() {
+    // Open Add Driver Modal
+    function openAddDriverModal() {
       document.getElementById("addDriverModal").style.display = "block";
       document.getElementById("addDriverForm").reset();
       
       // Clear validation states
+      document.getElementById("driverId").classList.remove("is-invalid");
       document.getElementById("driverName").classList.remove("is-invalid");
       document.getElementById("phoneNo").classList.remove("is-invalid");
       
-      // Get and set the next driver ID
-      const nextDriverId = await getNextDriverId();
-      document.getElementById("driverId").value = nextDriverId;
+      // Set focus to driver ID field
+      setTimeout(() => {
+        document.getElementById("driverId").focus();
+      }, 100);
     }
 
     // Close Add Driver Modal
@@ -503,12 +526,13 @@
     }
 
     // Validate and Save Driver Data from Modal
-    function validateAndSaveDriverData() {
+    async function validateAndSaveDriverData() {
       // Run all validations
+      const idValid = await validateDriverId();
       const nameValid = validateDriverName();
       const phoneValid = validatePhoneNo();
       
-      if (!nameValid || !phoneValid) {
+      if (!idValid || !nameValid || !phoneValid) {
         return; // Stop if any validation fails
       }
       
@@ -542,7 +566,8 @@
         if (!error) {
           alert("Driver saved successfully!");
           closeAddDriverModal();
-          appendDriverRow(driverData, newDriverRef.key);
+          // Reload the data to ensure correct serial numbers
+          loadDriverData();
         } else {
           alert("Error saving driver.");
         }
@@ -589,18 +614,8 @@
         if (!error) {
           alert("Driver updated successfully!");
           closeEditDriverModal();
-          // Update the row in the table
-          const row = document.querySelector(`tr[data-key="${key}"]`);
-          if (row) {
-            row.cells[0].textContent = driverId;
-            row.cells[1].textContent = driverName;
-            row.cells[2].textContent = city;
-            row.cells[3].textContent = address;
-            row.cells[4].textContent = phoneNo;
-          } else {
-            // If row not found, reload all data
-            loadDriverData();
-          }
+          // Reload all data to ensure serial numbers are correct
+          loadDriverData();
         } else {
           alert("Error updating driver.");
         }
@@ -618,14 +633,13 @@
       if (key) {
         db.ref("drivers/" + key).remove(function (error) {
           if (!error) {
-            row.remove();
+            // Reload all data to ensure serial numbers are correct
+            loadDriverData();
             alert("Driver deleted successfully!");
           } else {
             alert("Error deleting from database.");
           }
         });
-      } else {
-        row.remove(); // Only from UI if no key exists
       }
     }
 
@@ -659,6 +673,25 @@
       if (!/\d/.test(e.key)) {
         e.preventDefault();
       }
+    });
+    
+    // Format driver ID input
+    document.getElementById("driverId").addEventListener("input", function(e) {
+      let value = this.value;
+      // If the first character isn't 'D', add it
+      if (value.length > 0 && value[0] !== 'D') {
+        value = 'D' + value.replace(/\D/g, '');
+      } else {
+        // Keep the D but remove any non-digits after it
+        value = value.substring(0, 1) + value.substring(1).replace(/\D/g, '');
+      }
+      
+      // Limit to D + 3 digits
+      if (value.length > 4) {
+        value = value.substring(0, 4);
+      }
+      
+      this.value = value;
     });
   </script>
 </body>

@@ -132,12 +132,13 @@
     <table class="table table-bordered table-striped text-center">
       <thead class="table-dark">
         <tr>
+          <th>Sr No.</th>
           <th>GR No.</th>
           <th>Name</th>
           <th>Stream</th>
           <th>City</th>
-          <th>Address</th>
           <th>Phone No.</th>
+          <th>Fees Status</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -197,6 +198,18 @@
             <div class="form-group">
               <label for="address">Address:</label>
               <textarea class="form-control" id="address" rows="2" required></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="feesStatus">Fees Status:</label>
+              <select class="form-control" id="feesStatus" required>
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Partial">Partial</option>
+              </select>
             </div>
           </div>
         </div>
@@ -262,6 +275,18 @@
             </div>
           </div>
         </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="editFeesStatus">Fees Status:</label>
+              <select class="form-control" id="editFeesStatus" required>
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Partial">Partial</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div class="d-flex justify-content-end mt-3">
           <button type="button" class="btn btn-secondary me-2" onclick="closeEditStudentModal()">Cancel</button>
           <button type="button" class="btn btn-primary" onclick="validateAndUpdateStudentData()">Update Information</button>
@@ -303,6 +328,10 @@
             <th>Phone No.</th>
             <td id="viewPhoneNo"></td>
           </tr>
+          <tr>
+            <th>Fees Status</th>
+            <td id="viewFeesStatus"></td>
+          </tr>
         </table>
       </div>
       <div class="d-flex justify-content-end mt-3">
@@ -340,26 +369,42 @@
     function loadStudentData() {
       const table = document.getElementById("studentTable");
       table.innerHTML = '';
+      let serialNumber = 1; // Initialize serial number counter
       db.ref("students").once("value", function (snapshot) {
         snapshot.forEach(function (childSnapshot) {
           const key = childSnapshot.key;
           const data = childSnapshot.val();
-          appendStudentRow(data, key);
+          appendStudentRow(data, key, serialNumber++);
         });
       });
     }
 
-    function appendStudentRow(data, key) {
+    function appendStudentRow(data, key, serialNumber) {
       const table = document.getElementById("studentTable");
       const row = document.createElement("tr");
       row.setAttribute("data-key", key);
+      
+      // Set fees status to "Pending" if not defined
+      const feesStatus = data.feesStatus || "Pending";
+      
+      // Create fee status badge with color
+      let feesStatusBadge;
+      if (feesStatus === "Paid") {
+        feesStatusBadge = `<span class="badge bg-success">${feesStatus}</span>`;
+      } else if (feesStatus === "Partial") {
+        feesStatusBadge = `<span class="badge bg-warning text-dark">${feesStatus}</span>`;
+      } else {
+        feesStatusBadge = `<span class="badge bg-danger">${feesStatus}</span>`;
+      }
+      
       row.innerHTML = `
+        <td>${serialNumber}</td>
         <td>${data.grNo}</td>
         <td>${data.name}</td>
         <td>${data.stream}</td>
         <td>${data.city}</td>
-        <td>${data.address}</td>
         <td>${data.phoneNo}</td>
+        <td>${feesStatusBadge}</td>
         <td class="btn-group">
           <button class="btn btn-sm btn-info" onclick="openViewStudentModal('${key}')">
             <i class="fas fa-eye"></i> View
@@ -495,6 +540,17 @@
         document.getElementById("editAddress").value = data.address || '';
         document.getElementById("editCity").value = data.city || '';
         document.getElementById("editPhoneNo").value = data.phoneNo || '';
+        
+        // Set fee status if available, default to Pending
+        const selectElement = document.getElementById("editFeesStatus");
+        const feesStatus = data.feesStatus || "Pending";
+        
+        for (let i = 0; i < selectElement.options.length; i++) {
+          if (selectElement.options[i].value === feesStatus) {
+            selectElement.selectedIndex = i;
+            break;
+          }
+        }
       });
     }
 
@@ -516,6 +572,7 @@
         document.getElementById("viewAddress").textContent = data.address || '';
         document.getElementById("viewCity").textContent = data.city || '';
         document.getElementById("viewPhoneNo").textContent = data.phoneNo || '';
+        document.getElementById("viewFeesStatus").textContent = data.feesStatus || 'Pending';
       });
     }
 
@@ -546,6 +603,7 @@
       const address = document.getElementById("address").value.trim();
       const city = document.getElementById("city").value.trim();
       const phoneNo = document.getElementById("phoneNo").value.trim();
+      const feesStatus = document.getElementById("feesStatus").value;
 
       // Basic validation
       if (!grNo || !name || !stream || !address || !city || !phoneNo) {
@@ -559,7 +617,8 @@
         stream: stream,
         address: address,
         city: city,
-        phoneNo: phoneNo
+        phoneNo: phoneNo,
+        feesStatus: feesStatus
       };
 
       const newStudentRef = db.ref("students").push();
@@ -567,7 +626,7 @@
         if (!error) {
           alert("Student saved successfully!");
           closeAddStudentModal();
-          appendStudentRow(studentData, newStudentRef.key);
+          loadStudentData(); // Reload all data to get correct serial numbers
         } else {
           alert("Error saving student.");
         }
@@ -597,6 +656,7 @@
       const address = document.getElementById("editAddress").value.trim();
       const city = document.getElementById("editCity").value.trim();
       const phoneNo = document.getElementById("editPhoneNo").value.trim();
+      const feesStatus = document.getElementById("editFeesStatus").value;
 
       // Basic validation
       if (!grNo || !name || !stream || !address || !city || !phoneNo) {
@@ -610,26 +670,16 @@
         stream: stream,
         address: address,
         city: city,
-        phoneNo: phoneNo
+        phoneNo: phoneNo,
+        feesStatus: feesStatus
       };
 
       db.ref("students/" + key).set(updatedData, function (error) {
         if (!error) {
           alert("Student updated successfully!");
           closeEditStudentModal();
-          // Update the row in the table
-          const row = document.querySelector(`tr[data-key="${key}"]`);
-          if (row) {
-            row.cells[0].textContent = grNo;
-            row.cells[1].textContent = name;
-            row.cells[2].textContent = stream;
-            row.cells[3].textContent = city;
-            row.cells[4].textContent = address;
-            row.cells[5].textContent = phoneNo;
-          } else {
-            // If row not found, reload all data
-            loadStudentData();
-          }
+          // Reload all data since we need to maintain serial numbers
+          loadStudentData();
         } else {
           alert("Error updating student.");
         }
@@ -647,8 +697,9 @@
       if (key) {
         db.ref("students/" + key).remove(function (error) {
           if (!error) {
-            row.remove();
             alert("Student deleted successfully!");
+            // Reload all data to renumber serial numbers
+            loadStudentData();
           } else {
             alert("Error deleting from database.");
           }
