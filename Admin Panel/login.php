@@ -1,3 +1,22 @@
+<?php
+session_start();
+
+// Set your admin password
+$adminPassword = "abc123";
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $enteredPassword = $_POST['password'];
+
+    if ($enteredPassword === $adminPassword) {
+        $_SESSION['admin_logged_in'] = true;
+        header("Location: dashboard.php"); // Redirect to admin dashboard
+        exit();
+    } else {
+        $error = "Incorrect password!";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,6 +83,11 @@
         .login-btn:hover {
             background: #006f4e;
         }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -71,10 +95,13 @@
         <img src="img/mu_logo.png" alt="Marwadi University Logo" class="logo">
         <div class="title">MU Transit</div>
         <h1>Admin</h1>
-        <div class="input-group">
-            <input type="password" id="password" placeholder="Enter Password">
-        </div>
-        <button class="login-btn">Login</button>
+        <?php if (!empty($error)) echo "<div class='error'>$error</div>"; ?>
+        <form method="POST" action="">
+            <div class="input-group">
+                <input type="password" name="password" placeholder="Enter Password" required>
+            </div>
+            <button class="login-btn" type="submit">Login</button>
+        </form>
     </div>
 </body>
 </html>
