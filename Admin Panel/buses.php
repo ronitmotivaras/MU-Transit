@@ -6,6 +6,7 @@
   <title>MU Transit - Admin Panel</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -102,11 +103,37 @@
     .detail-label {
       font-weight: bold;
     }
+    /* Custom styles for select2 */
+    .select2-container {
+      width: 100% !important;
+    }
+    .select2-selection--multiple {
+      min-height: 38px !important;
+      border: 1px solid #ced4da !important;
+    }
+    .routes-section {
+      margin-top: 15px;
+      display: none;
+    }
+    .route-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .route-badge {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <!-- Sidebar -->
   <?php include('sidenavbar.php')?>
@@ -126,7 +153,7 @@
           <th>Sr No.</th>
           <th>Bus No.</th>
           <th>City</th>
-          <th>Route</th>
+          <th>Routes</th>
           <th>Seating Capacity</th>
           <th>Actions</th>
         </tr>
@@ -151,17 +178,17 @@
         </div>
         <div class="form-group">
           <label for="city">City:</label>
-          <select class="form-control" id="city" onchange="updateRouteDropdown('city', 'route')" required>
+          <select class="form-control" id="city" required onchange="loadRoutesByCity()">
             <option value="">Select City</option>
             <!-- Cities will be loaded dynamically -->
           </select>
         </div>
-        <div class="form-group">
-          <label for="route">Route:</label>
-          <select class="form-control" id="route" required>
-            <option value="">Select Route</option>
-            <!-- Routes will be loaded dynamically based on selected city -->
+        <div class="form-group routes-section" id="routesSection">
+          <label for="routes">Routes:</label>
+          <select class="form-control" id="routes" multiple="multiple">
+            <!-- Routes will be loaded dynamically based on city -->
           </select>
+          <small class="text-muted">You can select multiple routes</small>
         </div>
         <div class="form-group">
           <label for="seatingCapacity">Seating Capacity:</label>
@@ -191,17 +218,17 @@
         </div>
         <div class="form-group">
           <label for="editCity">City:</label>
-          <select class="form-control" id="editCity" onchange="updateRouteDropdown('editCity', 'editRoute')" required>
+          <select class="form-control" id="editCity" required onchange="loadEditRoutesByCity()">
             <option value="">Select City</option>
             <!-- Cities will be loaded dynamically -->
           </select>
         </div>
-        <div class="form-group">
-          <label for="editRoute">Route:</label>
-          <select class="form-control" id="editRoute" required>
-            <option value="">Select Route</option>
-            <!-- Routes will be loaded dynamically based on selected city -->
+        <div class="form-group routes-section" id="editRoutesSection">
+          <label for="editRoutes">Routes:</label>
+          <select class="form-control" id="editRoutes" multiple="multiple">
+            <!-- Routes will be loaded dynamically based on city -->
           </select>
+          <small class="text-muted">You can select multiple routes</small>
         </div>
         <div class="form-group">
           <label for="editSeatingCapacity">Seating Capacity:</label>
@@ -243,46 +270,188 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Available cities from routes
-    let availableCities = [];
+    // Store cities data
+    let citiesList = [];
     let existingBusNumbers = {};
-    let routesByCity = {}; // Store routes organized by city
+    let routesByCityId = {};
+    let routesData = {};
 
-    // Load buses and route data on page load
+    // Log for debugging
+    function logData(message, data) {
+      console.log(message, data);
+    }
+
+    // Load data on page load
     window.onload = function () {
-      loadRouteData();
+      loadCities();
+      loadRoutes();
       loadBusData();
-    };
-
-    function loadRouteData() {
-      db.ref("routes").once("value", function (snapshot) {
-        availableCities = [];
-        routesByCity = {};
-        
-        snapshot.forEach(function (childSnapshot) {
-          const key = childSnapshot.key;
-          const data = childSnapshot.val();
-          
-          // Extract city
-          if (data.city) {
-            if (!availableCities.includes(data.city)) {
-              availableCities.push(data.city);
-              routesByCity[data.city] = [];
-            }
-            
-            // Store route info
-            routesByCity[data.city].push({
-              key: key,
-              name: data.routeName || data.name || key
-            });
-          }
+      
+      // Initialize select2 for route selections
+      $(document).ready(function() {
+        $('#routes').select2({
+          placeholder: "Select Routes",
+          allowClear: true
         });
         
-        // Populate city dropdowns
-        populateCityDropdowns();
+        $('#editRoutes').select2({
+          placeholder: "Select Routes",
+          allowClear: true
+        });
+      });
+    };
+
+    // Load all routes data for reference
+    function loadRoutes() {
+      routesByCityId = {};
+      routesData = {};
+      
+      db.ref("routes").once("value", function (snapshot) {
+        if (snapshot.exists()) {
+          snapshot.forEach(function (childSnapshot) {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            
+            // Store route data for reference
+            routesData[key] = data;
+            
+            // Group routes by city ID
+            const cityId = data.cityId;
+            if (cityId) {
+              if (!routesByCityId[cityId]) {
+                routesByCityId[cityId] = [];
+              }
+              routesByCityId[cityId].push({
+                key: key,
+                route: data.route,
+                address: data.address,
+                time: data.time,
+                travelTime: data.travelTime
+              });
+            }
+          });
+        }
+        
+        logData("Routes loaded by city:", routesByCityId);
+      }).catch(error => {
+        console.error("Error loading routes:", error);
       });
     }
 
+    // Load routes by selected city for Add Bus Modal
+    function loadRoutesByCity() {
+      const citySelect = document.getElementById("city");
+      const cityId = citySelect.value;
+      const routesSection = document.getElementById("routesSection");
+      const routesSelect = document.getElementById("routes");
+      
+      // Clear routes
+      $('#routes').empty().trigger('change');
+      
+      if (!cityId) {
+        routesSection.style.display = "none";
+        return;
+      }
+      
+      routesSection.style.display = "block";
+      
+      // Get routes for this city
+      const cityRoutes = routesByCityId[cityId] || [];
+      
+      // Add options to select
+      cityRoutes.forEach(route => {
+        const option = new Option(route.route, route.key, false, false);
+        $('#routes').append(option);
+      });
+      
+      $('#routes').trigger('change');
+    }
+
+    // Load routes by selected city for Edit Bus Modal
+    function loadEditRoutesByCity() {
+      const citySelect = document.getElementById("editCity");
+      const cityId = citySelect.value;
+      const routesSection = document.getElementById("editRoutesSection");
+      
+      // Clear routes
+      $('#editRoutes').empty().trigger('change');
+      
+      if (!cityId) {
+        routesSection.style.display = "none";
+        return;
+      }
+      
+      routesSection.style.display = "block";
+      
+      // Get routes for this city
+      const cityRoutes = routesByCityId[cityId] || [];
+      
+      // Add options to select
+      cityRoutes.forEach(route => {
+        const option = new Option(route.route, route.key, false, false);
+        $('#editRoutes').append(option);
+      });
+      
+      $('#editRoutes').trigger('change');
+    }
+
+    // Load cities from the cities database
+    function loadCities() {
+      db.ref("cities").once("value", function (snapshot) {
+        citiesList = [];
+        
+        logData("Cities snapshot:", snapshot.val());
+        
+        if (snapshot.exists()) {
+          snapshot.forEach(function (childSnapshot) {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            
+            logData(`City data for ${key}:`, data);
+            
+            // Add city to list based on different possible data structures
+            if (typeof data === 'object' && data !== null) {
+              // If data is an object with name field
+              if (data.name) {
+                citiesList.push({
+                  key: key,
+                  name: data.name
+                });
+              } else {
+                // Use the key as name if no name field
+                citiesList.push({
+                  key: key,
+                  name: key
+                });
+              }
+            } else if (typeof data === 'string') {
+              // If data is stored as string value
+              citiesList.push({
+                key: key,
+                name: data
+              });
+            } else {
+              // Fallback to using key as name
+              citiesList.push({
+                key: key,
+                name: key
+              });
+            }
+          });
+        } else {
+          console.log("No cities found in database");
+        }
+        
+        logData("Processed cities list:", citiesList);
+        
+        // Populate city dropdowns
+        populateCityDropdowns();
+      }).catch(error => {
+        console.error("Error loading cities:", error);
+      });
+    }
+
+    // Populate city dropdowns with data
     function populateCityDropdowns() {
       const cityDropdown = document.getElementById("city");
       const editCityDropdown = document.getElementById("editCity");
@@ -291,28 +460,15 @@
       cityDropdown.innerHTML = '<option value="">Select City</option>';
       editCityDropdown.innerHTML = '<option value="">Select City</option>';
       
-      // Add new options
-      availableCities.forEach(city => {
-        cityDropdown.innerHTML += `<option value="${city}">${city}</option>`;
-        editCityDropdown.innerHTML += `<option value="${city}">${city}</option>`;
+      // Add new options sorted alphabetically
+      citiesList.sort((a, b) => a.name.localeCompare(b.name));
+      
+      citiesList.forEach(city => {
+        cityDropdown.innerHTML += `<option value="${city.key}">${city.name}</option>`;
+        editCityDropdown.innerHTML += `<option value="${city.key}">${city.name}</option>`;
       });
-    }
-
-    function updateRouteDropdown(citySelectId, routeSelectId) {
-      const citySelect = document.getElementById(citySelectId);
-      const routeSelect = document.getElementById(routeSelectId);
-      const selectedCity = citySelect.value;
       
-      // Clear existing options
-      routeSelect.innerHTML = '<option value="">Select Route</option>';
-      
-      // If city is selected and routes exist for that city
-      if (selectedCity && routesByCity[selectedCity]) {
-        // Add route options
-        routesByCity[selectedCity].forEach(route => {
-          routeSelect.innerHTML += `<option value="${route.key}">${route.name}</option>`;
-        });
-      }
+      logData("City dropdowns populated with:", citiesList.map(c => c.name));
     }
 
     function loadBusData() {
@@ -322,30 +478,56 @@
       existingBusNumbers = {};
       
       db.ref("buses").once("value", function (snapshot) {
-        snapshot.forEach(function (childSnapshot) {
-          const key = childSnapshot.key;
-          const data = childSnapshot.val();
-          
-          // Store bus number to prevent duplicates
-          const busNumber = data.busNum || data.busNo;
-          if (busNumber) {
-            existingBusNumbers[busNumber] = key;
-          }
-          
-          appendBusRow(data, key, srNo++);
-        });
+        if (snapshot.exists()) {
+          snapshot.forEach(function (childSnapshot) {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            
+            // Store bus number to prevent duplicates
+            const busNumber = data.busNum || data.busNo;
+            if (busNumber) {
+              existingBusNumbers[busNumber] = key;
+            }
+            
+            appendBusRow(data, key, srNo++);
+          });
+        } else {
+          table.innerHTML = '<tr><td colspan="6" class="text-center">No buses found</td></tr>';
+          console.log("No buses found in database");
+        }
+      }).catch(error => {
+        console.error("Error loading buses:", error);
+        table.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading buses</td></tr>';
       });
+    }
+
+    function getRouteNamesFromIds(routeIds) {
+      if (!routeIds || !Array.isArray(routeIds) || routeIds.length === 0) {
+        return 'None';
+      }
+      
+      // Get route names from route IDs
+      const routeNames = routeIds.map(id => {
+        const routeData = routesData[id];
+        return routeData ? routeData.route : 'Unknown';
+      }).filter(name => name !== 'Unknown');
+      
+      return routeNames.length > 0 ? routeNames.join(', ') : 'None';
     }
 
     function appendBusRow(data, key, srNo) {
       const table = document.getElementById("busTable");
       const row = document.createElement("tr");
       row.setAttribute("data-key", key);
+      
+      // Get routes display text
+      const routesDisplay = getRouteNamesFromIds(data.routes);
+      
       row.innerHTML = `
         <td>${srNo}</td>
         <td>${data.busNum || data.busNo}</td>
-        <td>${data.city || '-'}</td>
-        <td>${data.routeName || (data.routeKey ? getRouteNameByKey(data.routeKey) : '-')}</td>
+        <td>${data.cityName || data.city || '-'}</td>
+        <td>${routesDisplay}</td>
         <td>${data.seatingCapacity || '-'}</td>
         <td class="btn-group">
           <button class="btn btn-sm btn-info" onclick="openViewBusModal('${key}')">
@@ -361,24 +543,12 @@
       table.appendChild(row);
     }
 
-    function getRouteNameByKey(routeKey) {
-      // Search through all cities and their routes
-      for (const city in routesByCity) {
-        for (const route of routesByCity[city]) {
-          if (route.key === routeKey) {
-            return route.name;
-          }
-        }
-      }
-      return routeKey; // Return key if name not found
-    }
-
     // Open Add Bus Modal
     function openAddBusModal() {
       document.getElementById("addBusModal").style.display = "block";
       document.getElementById("addBusForm").reset();
-      // Reset route dropdown
-      document.getElementById("route").innerHTML = '<option value="">Select Route</option>';
+      document.getElementById("routesSection").style.display = "none";
+      $('#routes').empty().trigger('change');
     }
 
     // Close Add Bus Modal
@@ -391,9 +561,8 @@
       document.getElementById("editBusModal").style.display = "block";
       document.getElementById("editBusForm").reset();
       document.getElementById("editBusKey").value = key;
-      
-      // Reset route dropdown
-      document.getElementById("editRoute").innerHTML = '<option value="">Select Route</option>';
+      document.getElementById("editRoutesSection").style.display = "none";
+      $('#editRoutes').empty().trigger('change');
       
       // Fetch current bus data
       db.ref("buses/" + key).once("value", function(snapshot) {
@@ -404,18 +573,36 @@
         document.getElementById("originalBusNum").value = busNum; // Store original for comparison during update
         document.getElementById("editSeatingCapacity").value = data.seatingCapacity || '';
         
-        if (data.city) {
-          document.getElementById("editCity").value = data.city;
-          // Update route dropdown based on selected city
-          updateRouteDropdown('editCity', 'editRoute');
+        // Set city value
+        const cityKey = data.cityId || null;
+        if (cityKey) {
+          document.getElementById("editCity").value = cityKey;
           
-          // Select the current route if available
-          if (data.routeKey) {
-            setTimeout(() => {
-              document.getElementById("editRoute").value = data.routeKey;
-            }, 100); // Small delay to ensure dropdown is populated
+          // Show routes section
+          document.getElementById("editRoutesSection").style.display = "block";
+          
+          // Load routes for this city
+          const cityRoutes = routesByCityId[cityKey] || [];
+          cityRoutes.forEach(route => {
+            const option = new Option(route.route, route.key, false, false);
+            $('#editRoutes').append(option);
+          });
+          
+          // Select current routes
+          if (data.routes && Array.isArray(data.routes)) {
+            $('#editRoutes').val(data.routes).trigger('change');
+          }
+        } else if (data.city) {
+          // If no cityId but has city name, try to find matching city
+          const cityObj = citiesList.find(c => c.name === data.city);
+          if (cityObj) {
+            document.getElementById("editCity").value = cityObj.key;
+            loadEditRoutesByCity();
           }
         }
+      }).catch(error => {
+        console.error("Error loading bus for edit:", error);
+        alert("Error loading bus details. Please try again.");
       });
     }
 
@@ -432,31 +619,61 @@
       
       // Fetch bus data
       db.ref("buses/" + key).once("value", function(snapshot) {
-        const data = snapshot.val();
-        const routeName = data.routeName || (data.routeKey ? getRouteNameByKey(data.routeKey) : '-');
-        
-        detailsContainer.innerHTML = `
-          <div class="row">
-            <div class="col-md-6">
-              <div class="detail-item">
-                <div class="detail-label">Bus Number:</div>
-                <div>${data.busNum || data.busNo || '-'}</div>
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          
+          // Get city name
+          const cityName = data.cityName || data.city || '-';
+          
+          // Get route information
+          let routesHtml = '<div>None</div>';
+          if (data.routes && Array.isArray(data.routes) && data.routes.length > 0) {
+            routesHtml = '<div class="route-badges">';
+            
+            data.routes.forEach(routeId => {
+              const routeData = routesData[routeId];
+              if (routeData) {
+                routesHtml += `
+                  <div class="route-badge">
+                    ${routeData.route} (${routeData.time})
+                  </div>
+                `;
+              }
+            });
+            
+            routesHtml += '</div>';
+          }
+          
+          detailsContainer.innerHTML = `
+            <div class="row">
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <div class="detail-label">Bus Number:</div>
+                  <div>${data.busNum || data.busNo || '-'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">City:</div>
+                  <div>${cityName}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Seating Capacity:</div>
+                  <div>${data.seatingCapacity || '-'}</div>
+                </div>
               </div>
-              <div class="detail-item">
-                <div class="detail-label">City:</div>
-                <div>${data.city || '-'}</div>
-              </div>
-              <div class="detail-item">
-                <div class="detail-label">Route:</div>
-                <div>${routeName}</div>
-              </div>
-              <div class="detail-item">
-                <div class="detail-label">Seating Capacity:</div>
-                <div>${data.seatingCapacity || '-'}</div>
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <div class="detail-label">Routes:</div>
+                  ${routesHtml}
+                </div>
               </div>
             </div>
-          </div>
-        `;
+          `;
+        } else {
+          detailsContainer.innerHTML = '<div class="alert alert-warning">Bus details not found</div>';
+        }
+      }).catch(error => {
+        console.error("Error loading bus details:", error);
+        detailsContainer.innerHTML = '<div class="alert alert-danger">Error loading bus details</div>';
       });
     }
 
@@ -478,12 +695,14 @@
     // Save Bus Data from Modal
     function saveBusData() {
       const busNum = document.getElementById("busNum").value.trim();
-      const city = document.getElementById("city").value.trim();
-      const routeKey = document.getElementById("route").value.trim();
+      const citySelect = document.getElementById("city");
+      const cityId = citySelect.value.trim();
+      const cityName = citySelect.options[citySelect.selectedIndex].text.trim();
       const seatingCapacity = document.getElementById("seatingCapacity").value.trim();
+      const selectedRoutes = $('#routes').val() || [];
 
       // Basic validation
-      if (!busNum || !city || !routeKey || !seatingCapacity) {
+      if (!busNum || !cityId || !seatingCapacity) {
         alert("Please fill all required fields");
         return;
       }
@@ -494,15 +713,12 @@
         return;
       }
 
-      // Get route name for display
-      const routeName = getRouteNameByKey(routeKey);
-
       const busData = {
         busNum: busNum,
-        city: city,
-        routeKey: routeKey,
-        routeName: routeName,
-        seatingCapacity: parseInt(seatingCapacity)
+        cityId: cityId,
+        cityName: cityName,
+        seatingCapacity: parseInt(seatingCapacity),
+        routes: selectedRoutes
       };
 
       // Use the bus number as the key to prevent duplicates
@@ -523,12 +739,14 @@
       const key = document.getElementById("editBusKey").value;
       const originalBusNum = document.getElementById("originalBusNum").value;
       const busNum = document.getElementById("editBusNum").value.trim();
-      const city = document.getElementById("editCity").value.trim();
-      const routeKey = document.getElementById("editRoute").value.trim();
+      const citySelect = document.getElementById("editCity");
+      const cityId = citySelect.value.trim();
+      const cityName = citySelect.options[citySelect.selectedIndex].text.trim();
       const seatingCapacity = document.getElementById("editSeatingCapacity").value.trim();
+      const selectedRoutes = $('#editRoutes').val() || [];
 
       // Basic validation
-      if (!busNum || !city || !routeKey || !seatingCapacity) {
+      if (!busNum || !cityId || !seatingCapacity) {
         alert("Please fill all required fields");
         return;
       }
@@ -539,15 +757,12 @@
         return;
       }
 
-      // Get route name for display
-      const routeName = getRouteNameByKey(routeKey);
-
       const updatedData = {
         busNum: busNum,
-        city: city,
-        routeKey: routeKey,
-        routeName: routeName,
-        seatingCapacity: parseInt(seatingCapacity)
+        cityId: cityId,
+        cityName: cityName,
+        seatingCapacity: parseInt(seatingCapacity),
+        routes: selectedRoutes
       };
 
       // If the bus number is changed, we need to delete the old record and create a new one
