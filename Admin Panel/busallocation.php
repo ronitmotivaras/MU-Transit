@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MU Transit - Bus Allocation</title>
+  <title>MU Transit - Admin Panel</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -47,7 +48,7 @@
       justify-content: center;
       gap: 5px;
     }
-    .add-allocation-btn {
+    .add-bus-btn {
       background-color: #28a745;
       color: white;
       border: none;
@@ -56,7 +57,7 @@
       font-size: 16px;
       cursor: pointer;
     }
-    .add-allocation-btn:hover {
+    .add-bus-btn:hover {
       background-color: #218838;
     }
     /* Modal styles */
@@ -72,11 +73,11 @@
     }
     .modal-content {
       background-color: white;
-      margin: 5% auto;
+      margin: 10% auto;
       padding: 20px;
       border-radius: 5px;
-      width: 70%;
-      max-width: 600px;
+      width: 60%;
+      max-width: 500px;
     }
     .modal-header {
       display: flex;
@@ -93,231 +94,166 @@
     .form-group {
       margin-bottom: 15px;
     }
-    table {
-      table-layout: fixed;
+    .view-modal .modal-content {
+      max-width: 700px;
     }
-    td {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .detail-item {
+      margin-bottom: 15px;
     }
-    .card {
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-    .card-header {
-      border-radius: 10px 10px 0 0;
+    .detail-label {
       font-weight: bold;
     }
-    .allocation-filters {
-      background-color: #f8f9fa;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+    /* Custom styles for select2 */
+    .select2-container {
+      width: 100% !important;
     }
-    .student-selection {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ced4da;
-      border-radius: 5px;
-      padding: 10px;
+    .select2-selection--multiple {
+      min-height: 38px !important;
+      border: 1px solid #ced4da !important;
     }
-    .student-item {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .student-item:last-child {
-      border-bottom: none;
-    }
-    .invalid-feedback {
+    .routes-section {
+      margin-top: 15px;
       display: none;
-      color: #dc3545;
+    }
+    .route-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .route-badge {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 3px 8px;
       font-size: 14px;
-    }
-    .is-invalid {
-      border-color: #dc3545;
-    }
-    .is-invalid + .invalid-feedback {
-      display: block;
     }
   </style>
 </head>
 <body>
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <!-- Sidebar -->
   <?php include('sidenavbar.php')?>
 
-  <!-- Bus Allocation Content -->
+  <!-- Bus List -->
   <div class="content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Bus Allocation</h2>
-      <button class="add-allocation-btn" onclick="openAddAllocationModal()">
-        <i class="fas fa-plus"></i> New Allocation
+      <h2>Buses</h2>
+      <button class="add-bus-btn" onclick="openAddBusModal()">
+        <i class="fas fa-plus"></i> Add Bus
       </button>
     </div>
 
-    <!-- Allocation Filters -->
-    <div class="allocation-filters">
-      <div class="row">
-        <div class="col-md-3 mb-2">
-          <label for="filterShift" class="form-label">Filter by Shift</label>
-          <select class="form-select" id="filterShift" onchange="filterAllocations()">
-            <option value="">All Shifts</option>
-            <!-- Will be populated from database -->
-          </select>
-        </div>
-        <div class="col-md-3 mb-2">
-          <label for="filterCity" class="form-label">Filter by City</label>
-          <select class="form-select" id="filterCity" onchange="filterAllocations()">
-            <option value="">All Cities</option>
-            <!-- Will be populated from database -->
-          </select>
-        </div>
-        <div class="col-md-3 mb-2">
-          <label for="filterBus" class="form-label">Filter by Bus</label>
-          <select class="form-select" id="filterBus" onchange="filterAllocations()">
-            <option value="">All Buses</option>
-            <!-- Will be populated from database -->
-          </select>
-        </div>
-        <div class="col-md-3 mb-2">
-          <label class="form-label">&nbsp;</label>
-          <button class="btn btn-primary form-control" onclick="resetFilters()">
-            <i class="fas fa-sync-alt"></i> Reset Filters
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bus Allocation List -->
-    <div class="row" id="allocationCards">
-      <!-- Allocation cards will be dynamically loaded here -->
-    </div>
+    <table class="table table-bordered table-striped text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>Sr No.</th>
+          <th>Bus No.</th>
+          <th>City</th>
+          <th>Routes</th>
+          <th>Seating Capacity</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="busTable">
+        <!-- Data will be dynamically loaded -->
+      </tbody>
+    </table>
   </div>
 
-  <!-- Add Allocation Modal -->
-  <div id="addAllocationModal" class="modal">
+  <!-- Add Bus Modal -->
+  <div id="addBusModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>New Bus Allocation</h3>
-        <span class="close-btn" onclick="closeAddAllocationModal()">&times;</span>
+        <h3>Add New Bus</h3>
+        <span class="close-btn" onclick="closeAddBusModal()">&times;</span>
       </div>
-      <form id="addAllocationForm">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="shift">Shift:</label>
-              <select class="form-select" id="shift" required onchange="loadTimingsByShift()">
-                <option value="">Select Shift</option>
-                <!-- Will be populated from database -->
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="time">Time:</label>
-              <select class="form-select" id="time" required>
-                <option value="">Select Time</option>
-                <!-- Will be populated based on shift -->
-              </select>
-            </div>
-          </div>
+      <form id="addBusForm">
+        <div class="form-group">
+          <label for="busNum">Bus Number:</label>
+          <input type="text" class="form-control" id="busNum" required>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="city">City:</label>
-              <select class="form-select" id="city" required onchange="loadPickupPointsByCity()">
-                <option value="">Select City</option>
-                <!-- Will be populated from database -->
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="pickupPoint">Pickup Point:</label>
-              <select class="form-select" id="pickupPoint" required>
-                <option value="">Select Pickup Point</option>
-                <!-- Will be populated based on city -->
-              </select>
-            </div>
-          </div>
+        <div class="form-group">
+          <label for="city">City:</label>
+          <select class="form-control" id="city" required onchange="loadRoutesByCity()">
+            <option value="">Select City</option>
+            <!-- Cities will be loaded dynamically -->
+          </select>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="busNumber">Bus Number:</label>
-              <select class="form-select" id="busNumber" required>
-                <option value="">Select Bus</option>
-                <!-- Will be populated from database -->
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="capacity">Capacity:</label>
-              <input type="text" class="form-control" id="capacity" readonly>
-            </div>
-          </div>
+        <div class="form-group routes-section" id="routesSection">
+          <label for="routes">Routes:</label>
+          <select class="form-control" id="routes" multiple="multiple">
+            <!-- Routes will be loaded dynamically based on city -->
+          </select>
+          <small class="text-muted">You can select multiple routes</small>
         </div>
-        
-        <div class="form-group mt-3">
-          <label for="studentSelection">Select Students:</label>
-          <div class="input-group mb-2">
-            <input type="text" class="form-control" id="studentSearch" placeholder="Search students...">
-            <button class="btn btn-outline-secondary" type="button" onclick="searchStudents()">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
-          <div class="student-selection" id="studentSelection">
-            <!-- Students will be listed here -->
-          </div>
-          <div class="d-flex justify-content-between mt-2">
-            <small class="text-muted">Selected: <span id="selectedCount">0</span></small>
-            <small class="text-danger" id="capacityWarning" style="display:none;">
-              Warning: Selected students exceed bus capacity!
-            </small>
-          </div>
+        <div class="form-group">
+          <label for="seatingCapacity">Seating Capacity:</label>
+          <input type="number" class="form-control" id="seatingCapacity" min="1" required>
         </div>
-        
-        <div class="d-flex justify-content-end mt-3">
-          <button type="button" class="btn btn-secondary me-2" onclick="closeAddAllocationModal()">Cancel</button>
-          <button type="button" class="btn btn-success" onclick="saveAllocation()">Save Allocation</button>
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-secondary me-2" onclick="closeAddBusModal()">Cancel</button>
+          <button type="button" class="btn btn-success" onclick="saveBusData()">Save Bus</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- View Allocation Students Modal -->
-  <div id="viewStudentsModal" class="modal">
+  <!-- Edit Bus Modal -->
+  <div id="editBusModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Allocated Students</h3>
-        <span class="close-btn" onclick="closeViewStudentsModal()">&times;</span>
+        <h3>Edit Bus</h3>
+        <span class="close-btn" onclick="closeEditBusModal()">&times;</span>
       </div>
-      <div class="student-details">
-        <table class="table table-bordered table-striped">
-          <thead class="table-dark">
-            <tr>
-              <th>GR No.</th>
-              <th>Name</th>
-              <th>Stream</th>
-              <th>Phone No.</th>
-            </tr>
-          </thead>
-          <tbody id="viewStudentsTable">
-            <!-- Allocated students will be listed here -->
-          </tbody>
-        </table>
+      <form id="editBusForm">
+        <input type="hidden" id="editBusKey">
+        <input type="hidden" id="originalBusNum">
+        <div class="form-group">
+          <label for="editBusNum">Bus Number:</label>
+          <input type="text" class="form-control" id="editBusNum" required>
+        </div>
+        <div class="form-group">
+          <label for="editCity">City:</label>
+          <select class="form-control" id="editCity" required onchange="loadEditRoutesByCity()">
+            <option value="">Select City</option>
+            <!-- Cities will be loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group routes-section" id="editRoutesSection">
+          <label for="editRoutes">Routes:</label>
+          <select class="form-control" id="editRoutes" multiple="multiple">
+            <!-- Routes will be loaded dynamically based on city -->
+          </select>
+          <small class="text-muted">You can select multiple routes</small>
+        </div>
+        <div class="form-group">
+          <label for="editSeatingCapacity">Seating Capacity:</label>
+          <input type="number" class="form-control" id="editSeatingCapacity" min="1" required>
+        </div>
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-secondary me-2" onclick="closeEditBusModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updateBusData()">Update Bus</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Bus Modal -->
+  <div id="viewBusModal" class="modal view-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Bus Details</h3>
+        <span class="close-btn" onclick="closeViewBusModal()">&times;</span>
+      </div>
+      <div id="busDetails" class="p-3">
+        <!-- Bus details will be shown here -->
       </div>
       <div class="d-flex justify-content-end mt-3">
-        <button type="button" class="btn btn-secondary" onclick="closeViewStudentsModal()">Close</button>
+        <button type="button" class="btn btn-secondary" onclick="closeViewBusModal()">Close</button>
       </div>
     </div>
   </div>
@@ -334,452 +270,573 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Global variables
-    let selectedStudents = [];
-    let currentBusCapacity = 0;
+    // Store cities data
+    let citiesList = [];
+    let existingBusNumbers = {};
+    let routesByCityId = {};
+    let routesData = {};
+
+    // Log for debugging
+    function logData(message, data) {
+      console.log(message, data);
+    }
 
     // Load data on page load
     window.onload = function () {
-      loadAllAllocations();
-      loadShifts();
       loadCities();
-      loadBuses();
+      loadRoutes();
+      loadBusData();
       
-      // Also load shifts, cities, and buses for filters
-      loadDataForFilters();
+      // Initialize select2 for route selections
+      $(document).ready(function() {
+        $('#routes').select2({
+          placeholder: "Select Routes",
+          allowClear: true
+        });
+        
+        $('#editRoutes').select2({
+          placeholder: "Select Routes",
+          allowClear: true
+        });
+      });
     };
 
-    function loadDataForFilters() {
-      // Load shifts for filter
-      db.ref("shifts").once("value", function(snapshot) {
-        const filterDropdown = document.getElementById("filterShift");
-        snapshot.forEach(function(childSnapshot) {
-          const shift = childSnapshot.val().name;
-          const option = document.createElement("option");
-          option.value = shift;
-          option.textContent = shift;
-          filterDropdown.appendChild(option);
-        });
-      });
+    // Load all routes data for reference
+    function loadRoutes() {
+      routesByCityId = {};
+      routesData = {};
       
-      // Load cities for filter
-      db.ref("cities").once("value", function(snapshot) {
-        const filterDropdown = document.getElementById("filterCity");
-        snapshot.forEach(function(childSnapshot) {
-          const city = childSnapshot.val().name;
-          const option = document.createElement("option");
-          option.value = city;
-          option.textContent = city;
-          filterDropdown.appendChild(option);
-        });
-      });
-      
-      // Load buses for filter
-      db.ref("buses").once("value", function(snapshot) {
-        const filterDropdown = document.getElementById("filterBus");
-        snapshot.forEach(function(childSnapshot) {
-          const busNumber = childSnapshot.val().busNumber;
-          const option = document.createElement("option");
-          option.value = busNumber;
-          option.textContent = busNumber;
-          filterDropdown.appendChild(option);
-        });
-      });
-    }
-
-    function loadAllAllocations() {
-      const container = document.getElementById("allocationCards");
-      container.innerHTML = '';
-      
-      db.ref("allocations").once("value", function(snapshot) {
-        if (!snapshot.exists()) {
-          container.innerHTML = '<div class="col-12 text-center"><p>No bus allocations found.</p></div>';
-          return;
-        }
-        
-        snapshot.forEach(function(childSnapshot) {
-          const key = childSnapshot.key;
-          const allocation = childSnapshot.val();
-          createAllocationCard(allocation, key);
-        });
-      });
-    }
-
-    function createAllocationCard(allocation, key) {
-      const container = document.getElementById("allocationCards");
-      const col = document.createElement("div");
-      col.className = "col-md-6 col-lg-4";
-      col.setAttribute("data-shift", allocation.shift);
-      col.setAttribute("data-city", allocation.city);
-      col.setAttribute("data-bus", allocation.busNumber);
-      
-      // Count students
-      const studentCount = allocation.students ? Object.keys(allocation.students).length : 0;
-      
-      col.innerHTML = `
-        <div class="card">
-          <div class="card-header bg-primary text-white">
-            Bus ${allocation.busNumber} - ${allocation.shift} Shift
-          </div>
-          <div class="card-body">
-            <h5 class="card-title">${allocation.city} - ${allocation.pickupPoint}</h5>
-            <p class="card-text">
-              <strong>Time:</strong> ${allocation.time}<br>
-              <strong>Students:</strong> ${studentCount} / ${allocation.capacity}
-            </p>
-            <div class="btn-group">
-              <button class="btn btn-sm btn-info" onclick="viewAllocatedStudents('${key}')">
-                <i class="fas fa-users"></i> View Students
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteAllocation('${key}')">
-                <i class="fas fa-trash"></i> Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      container.appendChild(col);
-    }
-
-    function viewAllocatedStudents(allocationKey) {
-      const table = document.getElementById("viewStudentsTable");
-      table.innerHTML = '';
-      
-      db.ref(`allocations/${allocationKey}/students`).once("value", function(snapshot) {
-        if (!snapshot.exists()) {
-          table.innerHTML = '<tr><td colspan="4" class="text-center">No students allocated to this bus.</td></tr>';
-          return;
-        }
-        
-        const studentIds = Object.keys(snapshot.val());
-        
-        // For each student ID, fetch student details
-        studentIds.forEach(function(studentId) {
-          db.ref(`students/${studentId}`).once("value", function(studentSnapshot) {
-            if (studentSnapshot.exists()) {
-              const student = studentSnapshot.val();
-              const row = document.createElement("tr");
-              row.innerHTML = `
-                <td>${student.grNo}</td>
-                <td>${student.name}</td>
-                <td>${student.stream}</td>
-                <td>${student.phoneNo}</td>
-              `;
-              table.appendChild(row);
+      db.ref("routes").once("value", function (snapshot) {
+        if (snapshot.exists()) {
+          snapshot.forEach(function (childSnapshot) {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            
+            // Store route data for reference
+            routesData[key] = data;
+            
+            // Group routes by city ID
+            const cityId = data.cityId;
+            if (cityId) {
+              if (!routesByCityId[cityId]) {
+                routesByCityId[cityId] = [];
+              }
+              routesByCityId[cityId].push({
+                key: key,
+                route: data.route,
+                address: data.address,
+                time: data.time,
+                travelTime: data.travelTime
+              });
             }
           });
-        });
-      });
-      
-      document.getElementById("viewStudentsModal").style.display = "block";
-    }
-
-    function closeViewStudentsModal() {
-      document.getElementById("viewStudentsModal").style.display = "none";
-    }
-
-    function loadShifts() {
-      const shiftDropdown = document.getElementById("shift");
-      shiftDropdown.innerHTML = '<option value="">Select Shift</option>';
-      
-      db.ref("shifts").once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          const shift = childSnapshot.val().name;
-          const option = document.createElement("option");
-          option.value = shift;
-          option.textContent = shift;
-          shiftDropdown.appendChild(option);
-        });
+        }
+        
+        logData("Routes loaded by city:", routesByCityId);
+      }).catch(error => {
+        console.error("Error loading routes:", error);
       });
     }
 
-    function loadTimingsByShift() {
-      const shift = document.getElementById("shift").value;
-      const timeDropdown = document.getElementById("time");
-      timeDropdown.innerHTML = '<option value="">Select Time</option>';
+    // Load routes by selected city for Add Bus Modal
+    function loadRoutesByCity() {
+      const citySelect = document.getElementById("city");
+      const cityId = citySelect.value;
+      const routesSection = document.getElementById("routesSection");
+      const routesSelect = document.getElementById("routes");
       
-      if (!shift) return;
+      // Clear routes
+      $('#routes').empty().trigger('change');
       
-      db.ref("timings").orderByChild("shift").equalTo(shift).once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          const timing = childSnapshot.val();
-          const option = document.createElement("option");
-          option.value = timing.time;
-          option.textContent = timing.time;
-          timeDropdown.appendChild(option);
-        });
+      if (!cityId) {
+        routesSection.style.display = "none";
+        return;
+      }
+      
+      routesSection.style.display = "block";
+      
+      // Get routes for this city
+      const cityRoutes = routesByCityId[cityId] || [];
+      
+      // Add options to select
+      cityRoutes.forEach(route => {
+        const option = new Option(route.route, route.key, false, false);
+        $('#routes').append(option);
       });
+      
+      $('#routes').trigger('change');
     }
 
+    // Load routes by selected city for Edit Bus Modal
+    function loadEditRoutesByCity() {
+      const citySelect = document.getElementById("editCity");
+      const cityId = citySelect.value;
+      const routesSection = document.getElementById("editRoutesSection");
+      
+      // Clear routes
+      $('#editRoutes').empty().trigger('change');
+      
+      if (!cityId) {
+        routesSection.style.display = "none";
+        return;
+      }
+      
+      routesSection.style.display = "block";
+      
+      // Get routes for this city
+      const cityRoutes = routesByCityId[cityId] || [];
+      
+      // Add options to select
+      cityRoutes.forEach(route => {
+        const option = new Option(route.route, route.key, false, false);
+        $('#editRoutes').append(option);
+      });
+      
+      $('#editRoutes').trigger('change');
+    }
+
+    // Load cities from the cities database
     function loadCities() {
+      db.ref("cities").once("value", function (snapshot) {
+        citiesList = [];
+        
+        logData("Cities snapshot:", snapshot.val());
+        
+        if (snapshot.exists()) {
+          snapshot.forEach(function (childSnapshot) {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            
+            logData(`City data for ${key}:`, data);
+            
+            // Add city to list based on different possible data structures
+            if (typeof data === 'object' && data !== null) {
+              // If data is an object with name field
+              if (data.name) {
+                citiesList.push({
+                  key: key,
+                  name: data.name
+                });
+              } else {
+                // Use the key as name if no name field
+                citiesList.push({
+                  key: key,
+                  name: key
+                });
+              }
+            } else if (typeof data === 'string') {
+              // If data is stored as string value
+              citiesList.push({
+                key: key,
+                name: data
+              });
+            } else {
+              // Fallback to using key as name
+              citiesList.push({
+                key: key,
+                name: key
+              });
+            }
+          });
+        } else {
+          console.log("No cities found in database");
+        }
+        
+        logData("Processed cities list:", citiesList);
+        
+        // Populate city dropdowns
+        populateCityDropdowns();
+      }).catch(error => {
+        console.error("Error loading cities:", error);
+      });
+    }
+
+    // Populate city dropdowns with data
+    function populateCityDropdowns() {
       const cityDropdown = document.getElementById("city");
+      const editCityDropdown = document.getElementById("editCity");
+      
+      // Clear existing options
       cityDropdown.innerHTML = '<option value="">Select City</option>';
+      editCityDropdown.innerHTML = '<option value="">Select City</option>';
       
-      db.ref("cities").once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          const city = childSnapshot.val().name;
-          const option = document.createElement("option");
-          option.value = city;
-          option.textContent = city;
-          cityDropdown.appendChild(option);
-        });
+      // Add new options sorted alphabetically
+      citiesList.sort((a, b) => a.name.localeCompare(b.name));
+      
+      citiesList.forEach(city => {
+        cityDropdown.innerHTML += `<option value="${city.key}">${city.name}</option>`;
+        editCityDropdown.innerHTML += `<option value="${city.key}">${city.name}</option>`;
       });
+      
+      logData("City dropdowns populated with:", citiesList.map(c => c.name));
     }
 
-    function loadPickupPointsByCity() {
-      const city = document.getElementById("city").value;
-      const pickupDropdown = document.getElementById("pickupPoint");
-      pickupDropdown.innerHTML = '<option value="">Select Pickup Point</option>';
+    function loadBusData() {
+      const table = document.getElementById("busTable");
+      table.innerHTML = '';
+      let srNo = 1;
+      existingBusNumbers = {};
       
-      if (!city) return;
-      
-      db.ref("pickupPoints").orderByChild("city").equalTo(city).once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          const point = childSnapshot.val();
-          const option = document.createElement("option");
-          option.value = point.name;
-          option.textContent = point.name;
-          pickupDropdown.appendChild(option);
-        });
-      });
-    }
-
-    function loadBuses() {
-      const busDropdown = document.getElementById("busNumber");
-      busDropdown.innerHTML = '<option value="">Select Bus</option>';
-      
-      db.ref("buses").once("value", function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          const bus = childSnapshot.val();
-          const option = document.createElement("option");
-          option.value = bus.busNumber;
-          option.setAttribute("data-capacity", bus.capacity);
-          option.textContent = `${bus.busNumber} (${bus.capacity} seats)`;
-          busDropdown.appendChild(option);
-        });
-      });
-      
-      // Add event listener to update capacity field when bus is selected
-      document.getElementById("busNumber").addEventListener("change", function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const capacity = selectedOption.getAttribute("data-capacity");
-        document.getElementById("capacity").value = capacity || "";
-        currentBusCapacity = capacity ? parseInt(capacity) : 0;
-        
-        // Update capacity warning if needed
-        updateCapacityWarning();
-      });
-    }
-
-    function searchStudents() {
-      const searchTerm = document.getElementById("studentSearch").value.toLowerCase();
-      const selection = document.getElementById("studentSelection");
-      selection.innerHTML = '';
-      
-      // Get filter values
-      const city = document.getElementById("city").value;
-      
-      db.ref("students").once("value", function(snapshot) {
-        if (!snapshot.exists()) {
-          selection.innerHTML = '<div class="text-center">No students found.</div>';
-          return;
+      db.ref("buses").once("value", function (snapshot) {
+        if (snapshot.exists()) {
+          snapshot.forEach(function (childSnapshot) {
+            const key = childSnapshot.key;
+            const data = childSnapshot.val();
+            
+            // Store bus number to prevent duplicates
+            const busNumber = data.busNum || data.busNo;
+            if (busNumber) {
+              existingBusNumbers[busNumber] = key;
+            }
+            
+            appendBusRow(data, key, srNo++);
+          });
+        } else {
+          table.innerHTML = '<tr><td colspan="6" class="text-center">No buses found</td></tr>';
+          console.log("No buses found in database");
         }
+      }).catch(error => {
+        console.error("Error loading buses:", error);
+        table.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading buses</td></tr>';
+      });
+    }
+
+    function getRouteNamesFromIds(routeIds) {
+      if (!routeIds || !Array.isArray(routeIds) || routeIds.length === 0) {
+        return 'None';
+      }
+      
+      // Get route names from route IDs
+      const routeNames = routeIds.map(id => {
+        const routeData = routesData[id];
+        return routeData ? routeData.route : 'Unknown';
+      }).filter(name => name !== 'Unknown');
+      
+      return routeNames.length > 0 ? routeNames.join(', ') : 'None';
+    }
+
+    function appendBusRow(data, key, srNo) {
+      const table = document.getElementById("busTable");
+      const row = document.createElement("tr");
+      row.setAttribute("data-key", key);
+      
+      // Get routes display text
+      const routesDisplay = getRouteNamesFromIds(data.routes);
+      
+      row.innerHTML = `
+        <td>${srNo}</td>
+        <td>${data.busNum || data.busNo}</td>
+        <td>${data.cityName || data.city || '-'}</td>
+        <td>${routesDisplay}</td>
+        <td>${data.seatingCapacity || '-'}</td>
+        <td class="btn-group">
+          <button class="btn btn-sm btn-info" onclick="openViewBusModal('${key}')">
+            <i class="fas fa-eye"></i> View
+          </button>
+          <button class="btn btn-sm btn-warning" onclick="openEditBusModal('${key}')">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </td>`;
+      table.appendChild(row);
+    }
+
+    // Open Add Bus Modal
+    function openAddBusModal() {
+      document.getElementById("addBusModal").style.display = "block";
+      document.getElementById("addBusForm").reset();
+      document.getElementById("routesSection").style.display = "none";
+      $('#routes').empty().trigger('change');
+    }
+
+    // Close Add Bus Modal
+    function closeAddBusModal() {
+      document.getElementById("addBusModal").style.display = "none";
+    }
+
+    // Open Edit Bus Modal
+    function openEditBusModal(key) {
+      document.getElementById("editBusModal").style.display = "block";
+      document.getElementById("editBusForm").reset();
+      document.getElementById("editBusKey").value = key;
+      document.getElementById("editRoutesSection").style.display = "none";
+      $('#editRoutes').empty().trigger('change');
+      
+      // Fetch current bus data
+      db.ref("buses/" + key).once("value", function(snapshot) {
+        const data = snapshot.val();
+        const busNum = data.busNum || data.busNo || '';
         
-        let foundStudents = false;
+        document.getElementById("editBusNum").value = busNum;
+        document.getElementById("originalBusNum").value = busNum; // Store original for comparison during update
+        document.getElementById("editSeatingCapacity").value = data.seatingCapacity || '';
         
-        snapshot.forEach(function(childSnapshot) {
-          const key = childSnapshot.key;
-          const student = childSnapshot.val();
+        // Set city value
+        const cityKey = data.cityId || null;
+        if (cityKey) {
+          document.getElementById("editCity").value = cityKey;
           
-          // Filter by city and search term
-          if (student.city === city && 
-              (student.name.toLowerCase().includes(searchTerm) || 
-               student.grNo.toLowerCase().includes(searchTerm))) {
-            
-            foundStudents = true;
-            
-            // Check if already selected
-            const isSelected = selectedStudents.some(s => s.id === key);
-            
-            const studentDiv = document.createElement("div");
-            studentDiv.className = "student-item";
-            studentDiv.innerHTML = `
-              <div>
-                <strong>${student.name}</strong> (${student.grNo})
-                <small class="text-muted d-block">${student.stream}</small>
-              </div>
-              <div>
-                <input type="checkbox" class="form-check-input" value="${key}" 
-                  data-name="${student.name}" ${isSelected ? 'checked' : ''}
-                  onchange="toggleStudentSelection(this)">
-              </div>
-            `;
-            
-            selection.appendChild(studentDiv);
+          // Show routes section
+          document.getElementById("editRoutesSection").style.display = "block";
+          
+          // Load routes for this city
+          const cityRoutes = routesByCityId[cityKey] || [];
+          cityRoutes.forEach(route => {
+            const option = new Option(route.route, route.key, false, false);
+            $('#editRoutes').append(option);
+          });
+          
+          // Select current routes
+          if (data.routes && Array.isArray(data.routes)) {
+            $('#editRoutes').val(data.routes).trigger('change');
           }
-        });
-        
-        if (!foundStudents) {
-          selection.innerHTML = '<div class="text-center">No matching students found.</div>';
+        } else if (data.city) {
+          // If no cityId but has city name, try to find matching city
+          const cityObj = citiesList.find(c => c.name === data.city);
+          if (cityObj) {
+            document.getElementById("editCity").value = cityObj.key;
+            loadEditRoutesByCity();
+          }
         }
+      }).catch(error => {
+        console.error("Error loading bus for edit:", error);
+        alert("Error loading bus details. Please try again.");
       });
     }
 
-    function toggleStudentSelection(checkbox) {
-      const studentId = checkbox.value;
-      const studentName = checkbox.getAttribute("data-name");
+    // Close Edit Bus Modal
+    function closeEditBusModal() {
+      document.getElementById("editBusModal").style.display = "none";
+    }
+
+    // Open View Bus Modal
+    function openViewBusModal(key) {
+      document.getElementById("viewBusModal").style.display = "block";
+      const detailsContainer = document.getElementById("busDetails");
+      detailsContainer.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
       
-      if (checkbox.checked) {
-        // Add to selected students
-        selectedStudents.push({
-          id: studentId,
-          name: studentName
-        });
-      } else {
-        // Remove from selected students
-        selectedStudents = selectedStudents.filter(student => student.id !== studentId);
+      // Fetch bus data
+      db.ref("buses/" + key).once("value", function(snapshot) {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          
+          // Get city name
+          const cityName = data.cityName || data.city || '-';
+          
+          // Get route information
+          let routesHtml = '<div>None</div>';
+          if (data.routes && Array.isArray(data.routes) && data.routes.length > 0) {
+            routesHtml = '<div class="route-badges">';
+            
+            data.routes.forEach(routeId => {
+              const routeData = routesData[routeId];
+              if (routeData) {
+                routesHtml += `
+                  <div class="route-badge">
+                    ${routeData.route} (${routeData.time})
+                  </div>
+                `;
+              }
+            });
+            
+            routesHtml += '</div>';
+          }
+          
+          detailsContainer.innerHTML = `
+            <div class="row">
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <div class="detail-label">Bus Number:</div>
+                  <div>${data.busNum || data.busNo || '-'}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">City:</div>
+                  <div>${cityName}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Seating Capacity:</div>
+                  <div>${data.seatingCapacity || '-'}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <div class="detail-label">Routes:</div>
+                  ${routesHtml}
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          detailsContainer.innerHTML = '<div class="alert alert-warning">Bus details not found</div>';
+        }
+      }).catch(error => {
+        console.error("Error loading bus details:", error);
+        detailsContainer.innerHTML = '<div class="alert alert-danger">Error loading bus details</div>';
+      });
+    }
+
+    // Close View Bus Modal
+    function closeViewBusModal() {
+      document.getElementById("viewBusModal").style.display = "none";
+    }
+
+    // Check if bus number already exists
+    function checkBusNumberExists(busNum, originalBusNum = null) {
+      // If this is an edit and the bus number hasn't changed, it's OK
+      if (originalBusNum && busNum === originalBusNum) {
+        return false;
       }
       
-      // Update selected count display
-      document.getElementById("selectedCount").textContent = selectedStudents.length;
-      
-      // Check if exceeding capacity
-      updateCapacityWarning();
+      return existingBusNumbers.hasOwnProperty(busNum);
     }
 
-    function updateCapacityWarning() {
-      const warning = document.getElementById("capacityWarning");
-      if (currentBusCapacity > 0 && selectedStudents.length > currentBusCapacity) {
-        warning.style.display = "block";
-      } else {
-        warning.style.display = "none";
-      }
-    }
+    // Save Bus Data from Modal
+    function saveBusData() {
+      const busNum = document.getElementById("busNum").value.trim();
+      const citySelect = document.getElementById("city");
+      const cityId = citySelect.value.trim();
+      const cityName = citySelect.options[citySelect.selectedIndex].text.trim();
+      const seatingCapacity = document.getElementById("seatingCapacity").value.trim();
+      const selectedRoutes = $('#routes').val() || [];
 
-    function openAddAllocationModal() {
-      document.getElementById("addAllocationModal").style.display = "block";
-      document.getElementById("addAllocationForm").reset();
-      document.getElementById("studentSelection").innerHTML = '';
-      document.getElementById("selectedCount").textContent = "0";
-      document.getElementById("capacityWarning").style.display = "none";
-      selectedStudents = [];
-      currentBusCapacity = 0;
-    }
-
-    function closeAddAllocationModal() {
-      document.getElementById("addAllocationModal").style.display = "none";
-    }
-
-    function saveAllocation() {
-      // Get form values
-      const shift = document.getElementById("shift").value;
-      const time = document.getElementById("time").value;
-      const city = document.getElementById("city").value;
-      const pickupPoint = document.getElementById("pickupPoint").value;
-      const busNumber = document.getElementById("busNumber").value;
-      const capacity = document.getElementById("capacity").value;
-      
       // Basic validation
-      if (!shift || !time || !city || !pickupPoint || !busNumber) {
+      if (!busNum || !cityId || !seatingCapacity) {
         alert("Please fill all required fields");
         return;
       }
       
-      if (selectedStudents.length === 0) {
-        alert("Please select at least one student for allocation");
+      // Check if bus number already exists
+      if (checkBusNumberExists(busNum)) {
+        alert("Bus number already exists. Please use a unique bus number.");
         return;
       }
-      
-      // Create allocation object
-      const allocationData = {
-        shift: shift,
-        time: time,
-        city: city,
-        pickupPoint: pickupPoint,
-        busNumber: busNumber,
-        capacity: capacity,
-        createdAt: new Date().toISOString()
+
+      const busData = {
+        busNum: busNum,
+        cityId: cityId,
+        cityName: cityName,
+        seatingCapacity: parseInt(seatingCapacity),
+        routes: selectedRoutes
       };
-      
-      // Add students
-      allocationData.students = {};
-      selectedStudents.forEach(student => {
-        allocationData.students[student.id] = true;
-      });
-      
-      // Save to Firebase
-      const newAllocationRef = db.ref("allocations").push();
-      newAllocationRef.set(allocationData, function(error) {
-        if (error) {
-          alert("Error saving allocation: " + error.message);
+
+      // Use the bus number as the key to prevent duplicates
+      const newBusRef = db.ref("buses").child(busNum.replace(/[.#$\/\[\]]/g, "_"));
+      newBusRef.set(busData, function (error) {
+        if (!error) {
+          alert("Bus saved successfully!");
+          closeAddBusModal();
+          loadBusData(); // Reload all data to ensure correct Sr No.
         } else {
-          alert("Bus allocation saved successfully!");
-          closeAddAllocationModal();
-          createAllocationCard(allocationData, newAllocationRef.key);
+          alert("Error saving bus: " + error.message);
         }
       });
     }
 
-    function deleteAllocation(key) {
-      if (!confirm("Are you sure you want to delete this bus allocation?")) {
+    // Update Bus Data from Edit Modal
+    function updateBusData() {
+      const key = document.getElementById("editBusKey").value;
+      const originalBusNum = document.getElementById("originalBusNum").value;
+      const busNum = document.getElementById("editBusNum").value.trim();
+      const citySelect = document.getElementById("editCity");
+      const cityId = citySelect.value.trim();
+      const cityName = citySelect.options[citySelect.selectedIndex].text.trim();
+      const seatingCapacity = document.getElementById("editSeatingCapacity").value.trim();
+      const selectedRoutes = $('#editRoutes').val() || [];
+
+      // Basic validation
+      if (!busNum || !cityId || !seatingCapacity) {
+        alert("Please fill all required fields");
         return;
       }
       
-      db.ref("allocations/" + key).remove(function(error) {
-        if (error) {
-          alert("Error deleting allocation: " + error.message);
-        } else {
-          alert("Bus allocation deleted successfully!");
-          loadAllAllocations(); // Reload all allocations
-        }
-      });
+      // Check if bus number already exists (and it's not this record)
+      if (checkBusNumberExists(busNum, originalBusNum)) {
+        alert("Bus number already exists. Please use a unique bus number.");
+        return;
+      }
+
+      const updatedData = {
+        busNum: busNum,
+        cityId: cityId,
+        cityName: cityName,
+        seatingCapacity: parseInt(seatingCapacity),
+        routes: selectedRoutes
+      };
+
+      // If the bus number is changed, we need to delete the old record and create a new one
+      if (busNum !== originalBusNum) {
+        // First create the new record
+        const newKey = busNum.replace(/[.#$\/\[\]]/g, "_");
+        db.ref("buses/" + newKey).set(updatedData, function (error) {
+          if (!error) {
+            // Then delete the old record
+            db.ref("buses/" + key).remove(function (error) {
+              if (!error) {
+                alert("Bus updated successfully!");
+                closeEditBusModal();
+                loadBusData(); // Reload all data
+              } else {
+                alert("Error removing old record: " + error.message);
+              }
+            });
+          } else {
+            alert("Error updating bus: " + error.message);
+          }
+        });
+      } else {
+        // If bus number hasn't changed, just update the existing record
+        db.ref("buses/" + key).set(updatedData, function (error) {
+          if (!error) {
+            alert("Bus updated successfully!");
+            closeEditBusModal();
+            loadBusData(); // Reload all data
+          } else {
+            alert("Error updating bus: " + error.message);
+          }
+        });
+      }
     }
 
-    function filterAllocations() {
-      const shift = document.getElementById("filterShift").value;
-      const city = document.getElementById("filterCity").value;
-      const bus = document.getElementById("filterBus").value;
+    function deleteRow(button) {
+      if (!confirm("Are you sure you want to delete this bus?")) {
+        return;
+      }
       
-      const allocations = document.querySelectorAll("#allocationCards > div");
-      
-      allocations.forEach(function(allocation) {
-        const allocationShift = allocation.getAttribute("data-shift");
-        const allocationCity = allocation.getAttribute("data-city");
-        const allocationBus = allocation.getAttribute("data-bus");
-        
-        let shouldShow = true;
-        
-        if (shift && allocationShift !== shift) shouldShow = false;
-        if (city && allocationCity !== city) shouldShow = false;
-        if (bus && allocationBus !== bus) shouldShow = false;
-        
-        allocation.style.display = shouldShow ? "block" : "none";
-      });
-    }
+      const row = button.closest("tr");
+      const key = row.getAttribute("data-key");
 
-    function resetFilters() {
-      document.getElementById("filterShift").value = "";
-      document.getElementById("filterCity").value = "";
-      document.getElementById("filterBus").value = "";
-      
-      const allocations = document.querySelectorAll("#allocationCards > div");
-      allocations.forEach(function(allocation) {
-        allocation.style.display = "block";
-      });
+      if (key) {
+        db.ref("buses/" + key).remove(function (error) {
+          if (!error) {
+            loadBusData(); // Reload all data to ensure correct Sr No.
+            alert("Bus deleted successfully!");
+          } else {
+            alert("Error deleting from database: " + error.message);
+          }
+        });
+      } else {
+        row.remove(); // Only from UI if no key exists
+      }
     }
 
     // Close the modals when clicking outside of them
     window.onclick = function(event) {
-      const addModal = document.getElementById("addAllocationModal");
-      const viewModal = document.getElementById("viewStudentsModal");
+      const addModal = document.getElementById("addBusModal");
+      const editModal = document.getElementById("editBusModal");
+      const viewModal = document.getElementById("viewBusModal");
       
       if (event.target == addModal) {
-        closeAddAllocationModal();
+        closeAddBusModal();
+      }
+      
+      if (event.target == editModal) {
+        closeEditBusModal();
       }
       
       if (event.target == viewModal) {
-        closeViewStudentsModal();
+        closeViewBusModal();
       }
     }
   </script>

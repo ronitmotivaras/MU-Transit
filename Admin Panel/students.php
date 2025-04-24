@@ -137,7 +137,6 @@
           <th>Name</th>
           <th>Stream</th>
           <th>City</th>
-          <th>Phone No.</th>
           <th>Fees Status</th>
           <th>Actions</th>
         </tr>
@@ -176,9 +175,23 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="stream">Stream:</label>
-              <input type="text" class="form-control" id="stream" required>
+              <select class="form-control" id="stream" required onchange="handleStreamChange()">
+                <option value="">Select Stream</option>
+                <!-- Stream options will be loaded dynamically -->
+              </select>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="department">Department:</label>
+              <select class="form-control" id="department" disabled>
+                <option value="">Select Department</option>
+                <!-- Department options will be loaded dynamically -->
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label for="phoneNo">Phone No.:</label>
@@ -186,12 +199,24 @@
               <div class="invalid-feedback">Phone number must be exactly 10 digits.</div>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="city">City:</label>
+              <select class="form-control" id="city" required onchange="loadRoutesByCity()">
+                <option value="">Select City</option>
+                <!-- City options will be loaded dynamically -->
+              </select>
+            </div>
+          </div>
         </div>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="city">City:</label>
-              <input type="text" class="form-control" id="city" required>
+              <label for="route">Route:</label>
+              <select class="form-control" id="route" required>
+                <option value="">Select Route</option>
+                <!-- Route options will be loaded based on city -->
+              </select>
             </div>
           </div>
           <div class="col-md-6">
@@ -206,7 +231,6 @@
             <div class="form-group">
               <label for="feesStatus">Fees Status:</label>
               <select class="form-control" id="feesStatus" required>
-                <option value="Paid">Paid</option>
                 <option value="Pending">Pending</option>
                 <option value="Partial">Partial</option>
               </select>
@@ -250,9 +274,23 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="editStream">Stream:</label>
-              <input type="text" class="form-control" id="editStream" required>
+              <select class="form-control" id="editStream" required onchange="handleEditStreamChange()">
+                <option value="">Select Stream</option>
+                <!-- Stream options will be loaded dynamically -->
+              </select>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="editDepartment">Department:</label>
+              <select class="form-control" id="editDepartment" disabled>
+                <option value="">Select Department</option>
+                <!-- Department options will be loaded dynamically -->
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label for="editPhoneNo">Phone No.:</label>
@@ -260,12 +298,24 @@
               <div class="invalid-feedback">Phone number must be exactly 10 digits.</div>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="editCity">City:</label>
+              <select class="form-control" id="editCity" required onchange="loadEditRoutesByCity()">
+                <option value="">Select City</option>
+                <!-- City options will be loaded dynamically -->
+              </select>
+            </div>
+          </div>
         </div>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="editCity">City:</label>
-              <input type="text" class="form-control" id="editCity" required>
+              <label for="editRoute">Route:</label>
+              <select class="form-control" id="editRoute" required>
+                <option value="">Select Route</option>
+                <!-- Route options will be loaded based on city -->
+              </select>
             </div>
           </div>
           <div class="col-md-6">
@@ -317,12 +367,20 @@
             <td id="viewStream"></td>
           </tr>
           <tr>
+            <th>Department</th>
+            <td id="viewDepartment"></td>
+          </tr>
+          <tr>
             <th>Address</th>
             <td id="viewAddress"></td>
           </tr>
           <tr>
             <th>City</th>
             <td id="viewCity"></td>
+          </tr>
+          <tr>
+            <th>Route</th>
+            <td id="viewRoute"></td>
           </tr>
           <tr>
             <th>Phone No.</th>
@@ -352,9 +410,19 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Store data for relationships
+    let streams = [];
+    let departments = {};
+    let cities = [];
+    let routes = [];
+    let cityRoutes = {};
+
     // Load students on page load
     window.onload = function () {
       loadStudentData();
+      loadStreams();
+      loadCities();
+      loadRoutes();
       
       // Add input validation listeners
       document.getElementById("grNo").addEventListener("input", validateGrNo);
@@ -365,6 +433,224 @@
       document.getElementById("editName").addEventListener("input", validateEditName);
       document.getElementById("editPhoneNo").addEventListener("input", validateEditPhoneNo);
     };
+
+    // Load Stream data from database
+    function loadStreams() {
+      db.ref("streams").once("value", function(snapshot) {
+        const streamSelect = document.getElementById("stream");
+        const editStreamSelect = document.getElementById("editStream");
+        
+        // Clear existing options except the first one
+        streamSelect.innerHTML = '<option value="">Select Stream</option>';
+        editStreamSelect.innerHTML = '<option value="">Select Stream</option>';
+        
+        streams = [];
+        snapshot.forEach(function(childSnapshot) {
+          const streamData = childSnapshot.val();
+          const streamId = childSnapshot.key;
+          
+          // Store stream data
+          streams.push({
+            id: streamId,
+            name: streamData.name,
+            hasDepartments: streamData.hasDepartments || false,
+            departments: streamData.departments || []
+          });
+          
+          // Add to dropdown
+          const option = document.createElement("option");
+          option.value = streamId;
+          option.textContent = streamData.name;
+          streamSelect.appendChild(option);
+          
+          // Add to edit dropdown
+          const editOption = document.createElement("option");
+          editOption.value = streamId;
+          editOption.textContent = streamData.name;
+          editStreamSelect.appendChild(editOption);
+          
+          // Store departments for later use
+          if (streamData.departments) {
+            departments[streamId] = streamData.departments;
+          }
+        });
+      });
+    }
+    
+    // Handle stream change to enable/disable department selection
+    function handleStreamChange() {
+      const streamSelect = document.getElementById("stream");
+      const departmentSelect = document.getElementById("department");
+      const selectedStreamId = streamSelect.value;
+      
+      departmentSelect.innerHTML = '<option value="">Select Department</option>';
+      
+      if (!selectedStreamId) {
+        departmentSelect.disabled = true;
+        return;
+      }
+      
+      // Find selected stream
+      const selectedStream = streams.find(stream => stream.id === selectedStreamId);
+      
+      if (selectedStream && selectedStream.hasDepartments && selectedStream.departments) {
+        // Enable department selection and populate options
+        departmentSelect.disabled = false;
+        
+        // Add department options
+        selectedStream.departments.forEach(dept => {
+          const option = document.createElement("option");
+          option.value = dept.id;
+          option.textContent = dept.name;
+          departmentSelect.appendChild(option);
+        });
+      } else {
+        departmentSelect.disabled = true;
+      }
+    }
+    
+    // Handle stream change in edit modal
+    function handleEditStreamChange() {
+      const streamSelect = document.getElementById("editStream");
+      const departmentSelect = document.getElementById("editDepartment");
+      const selectedStreamId = streamSelect.value;
+      
+      departmentSelect.innerHTML = '<option value="">Select Department</option>';
+      
+      if (!selectedStreamId) {
+        departmentSelect.disabled = true;
+        return;
+      }
+      
+      // Find selected stream
+      const selectedStream = streams.find(stream => stream.id === selectedStreamId);
+      
+      if (selectedStream && selectedStream.hasDepartments && selectedStream.departments) {
+        // Enable department selection and populate options
+        departmentSelect.disabled = false;
+        
+        // Add department options
+        selectedStream.departments.forEach(dept => {
+          const option = document.createElement("option");
+          option.value = dept.id;
+          option.textContent = dept.name;
+          departmentSelect.appendChild(option);
+        });
+      } else {
+        departmentSelect.disabled = true;
+      }
+    }
+    
+    // Load Cities from database
+    function loadCities() {
+      db.ref("cities").once("value", function(snapshot) {
+        const citySelect = document.getElementById("city");
+        const editCitySelect = document.getElementById("editCity");
+        
+        // Clear existing options except the first one
+        citySelect.innerHTML = '<option value="">Select City</option>';
+        editCitySelect.innerHTML = '<option value="">Select City</option>';
+        
+        cities = [];
+        snapshot.forEach(function(childSnapshot) {
+          const cityData = childSnapshot.val();
+          const cityId = childSnapshot.key;
+          
+          // Store city data
+          cities.push({
+            id: cityId,
+            name: cityData.name
+          });
+          
+          // Add to dropdown
+          const option = document.createElement("option");
+          option.value = cityId;
+          option.textContent = cityData.name;
+          citySelect.appendChild(option);
+          
+          // Add to edit dropdown
+          const editOption = document.createElement("option");
+          editOption.value = cityId;
+          editOption.textContent = cityData.name;
+          editCitySelect.appendChild(editOption);
+        });
+      });
+    }
+
+    // Load Routes from database
+    function loadRoutes() {
+      db.ref("routes").once("value", function(snapshot) {
+        routes = [];
+        cityRoutes = {};
+        
+        snapshot.forEach(function(childSnapshot) {
+          const routeData = childSnapshot.val();
+          const routeId = childSnapshot.key;
+          
+          // Store route data
+          routes.push({
+            id: routeId,
+            name: routeData.name,
+            cityId: routeData.cityId
+          });
+          
+          // Group routes by city
+          if (routeData.cityId) {
+            if (!cityRoutes[routeData.cityId]) {
+              cityRoutes[routeData.cityId] = [];
+            }
+            cityRoutes[routeData.cityId].push({
+              id: routeId,
+              name: routeData.name
+            });
+          }
+        });
+      });
+    }
+    
+    // Load routes based on selected city
+    function loadRoutesByCity() {
+      const citySelect = document.getElementById("city");
+      const routeSelect = document.getElementById("route");
+      const selectedCityId = citySelect.value;
+      
+      // Clear existing options
+      routeSelect.innerHTML = '<option value="">Select Route</option>';
+      
+      if (!selectedCityId || !cityRoutes[selectedCityId]) {
+        return;
+      }
+      
+      // Add routes for selected city
+      cityRoutes[selectedCityId].forEach(route => {
+        const option = document.createElement("option");
+        option.value = route.id;
+        option.textContent = route.name;
+        routeSelect.appendChild(option);
+      });
+    }
+    
+    // Load routes based on selected city for edit modal
+    function loadEditRoutesByCity() {
+      const citySelect = document.getElementById("editCity");
+      const routeSelect = document.getElementById("editRoute");
+      const selectedCityId = citySelect.value;
+      
+      // Clear existing options
+      routeSelect.innerHTML = '<option value="">Select Route</option>';
+      
+      if (!selectedCityId || !cityRoutes[selectedCityId]) {
+        return;
+      }
+      
+      // Add routes for selected city
+      cityRoutes[selectedCityId].forEach(route => {
+        const option = document.createElement("option");
+        option.value = route.id;
+        option.textContent = route.name;
+        routeSelect.appendChild(option);
+      });
+    }
 
     function loadStudentData() {
       const table = document.getElementById("studentTable");
@@ -397,13 +683,30 @@
         feesStatusBadge = `<span class="badge bg-danger">${feesStatus}</span>`;
       }
       
+      // Get stream name if we have the ID
+      let streamName = data.stream;
+      if (streams.length > 0) {
+        const streamObj = streams.find(s => s.id === data.streamId);
+        if (streamObj) {
+          streamName = streamObj.name;
+        }
+      }
+      
+      // Get city name if we have the ID
+      let cityName = data.city;
+      if (cities.length > 0) {
+        const cityObj = cities.find(c => c.id === data.cityId);
+        if (cityObj) {
+          cityName = cityObj.name;
+        }
+      }
+      
       row.innerHTML = `
         <td>${serialNumber}</td>
         <td>${data.grNo}</td>
         <td>${data.name}</td>
-        <td>${data.stream}</td>
-        <td>${data.city}</td>
-        <td>${data.phoneNo}</td>
+        <td>${streamName}</td>
+        <td>${cityName}</td>
         <td>${feesStatusBadge}</td>
         <td class="btn-group">
           <button class="btn btn-sm btn-info" onclick="openViewStudentModal('${key}')">
@@ -513,6 +816,9 @@
       document.getElementById("grNo").classList.remove("is-invalid");
       document.getElementById("name").classList.remove("is-invalid");
       document.getElementById("phoneNo").classList.remove("is-invalid");
+      
+      // Disable department by default
+      document.getElementById("department").disabled = true;
     }
 
     // Close Add Student Modal
@@ -536,10 +842,32 @@
         const data = snapshot.val();
         document.getElementById("editGrNo").value = data.grNo || '';
         document.getElementById("editName").value = data.name || '';
-        document.getElementById("editStream").value = data.stream || '';
         document.getElementById("editAddress").value = data.address || '';
-        document.getElementById("editCity").value = data.city || '';
         document.getElementById("editPhoneNo").value = data.phoneNo || '';
+        
+        // Set stream if available
+        if (data.streamId) {
+          document.getElementById("editStream").value = data.streamId;
+          handleEditStreamChange();
+          
+          // Set department if available
+          if (data.departmentId) {
+            document.getElementById("editDepartment").value = data.departmentId;
+          }
+        }
+        
+        // Set city if available
+        if (data.cityId) {
+          document.getElementById("editCity").value = data.cityId;
+          loadEditRoutesByCity();
+          
+          // Set route if available
+          setTimeout(() => {
+            if (data.routeId) {
+              document.getElementById("editRoute").value = data.routeId;
+            }
+          }, 500);
+          }
         
         // Set fee status if available, default to Pending
         const selectElement = document.getElementById("editFeesStatus");
@@ -568,11 +896,49 @@
         const data = snapshot.val();
         document.getElementById("viewGrNo").textContent = data.grNo || '';
         document.getElementById("viewName").textContent = data.name || '';
-        document.getElementById("viewStream").textContent = data.stream || '';
         document.getElementById("viewAddress").textContent = data.address || '';
-        document.getElementById("viewCity").textContent = data.city || '';
         document.getElementById("viewPhoneNo").textContent = data.phoneNo || '';
         document.getElementById("viewFeesStatus").textContent = data.feesStatus || 'Pending';
+        
+        // Display stream name
+        let streamName = "Not specified";
+        if (data.streamId && streams.length > 0) {
+          const streamObj = streams.find(s => s.id === data.streamId);
+          if (streamObj) {
+            streamName = streamObj.name;
+          }
+        }
+        document.getElementById("viewStream").textContent = streamName;
+        
+        // Display department name
+        let departmentName = "Not specified";
+        if (data.streamId && data.departmentId && departments[data.streamId]) {
+          const deptObj = departments[data.streamId].find(d => d.id === data.departmentId);
+          if (deptObj) {
+            departmentName = deptObj.name;
+          }
+        }
+        document.getElementById("viewDepartment").textContent = departmentName;
+        
+        // Display city name
+        let cityName = "Not specified";
+        if (data.cityId && cities.length > 0) {
+          const cityObj = cities.find(c => c.id === data.cityId);
+          if (cityObj) {
+            cityName = cityObj.name;
+          }
+        }
+        document.getElementById("viewCity").textContent = cityName;
+        
+        // Display route name
+        let routeName = "Not specified";
+        if (data.routeId && routes.length > 0) {
+          const routeObj = routes.find(r => r.id === data.routeId);
+          if (routeObj) {
+            routeName = routeObj.name;
+          }
+        }
+        document.getElementById("viewRoute").textContent = routeName;
       });
     }
 
@@ -599,24 +965,47 @@
     function saveStudentData() {
       const grNo = document.getElementById("grNo").value.trim();
       const name = document.getElementById("name").value.trim();
-      const stream = document.getElementById("stream").value.trim();
+      const streamId = document.getElementById("stream").value;
+      const departmentId = document.getElementById("department").disabled ? "" : document.getElementById("department").value;
       const address = document.getElementById("address").value.trim();
-      const city = document.getElementById("city").value.trim();
+      const cityId = document.getElementById("city").value;
+      const routeId = document.getElementById("route").value;
       const phoneNo = document.getElementById("phoneNo").value.trim();
       const feesStatus = document.getElementById("feesStatus").value;
 
       // Basic validation
-      if (!grNo || !name || !stream || !address || !city || !phoneNo) {
-        alert("Please fill all fields");
+      if (!grNo || !name || !streamId || !address || !cityId || !routeId || !phoneNo) {
+        alert("Please fill all required fields");
         return;
+      }
+
+      // Get stream and city names for display
+      let streamName = "";
+      if (streams.length > 0) {
+        const streamObj = streams.find(s => s.id === streamId);
+        if (streamObj) {
+          streamName = streamObj.name;
+        }
+      }
+      
+      let cityName = "";
+      if (cities.length > 0) {
+        const cityObj = cities.find(c => c.id === cityId);
+        if (cityObj) {
+          cityName = cityObj.name;
+        }
       }
 
       const studentData = {
         grNo: grNo,
         name: name,
-        stream: stream,
+        streamId: streamId,
+        stream: streamName,
+        departmentId: departmentId,
         address: address,
-        city: city,
+        cityId: cityId,
+        city: cityName,
+        routeId: routeId,
         phoneNo: phoneNo,
         feesStatus: feesStatus
       };
@@ -652,24 +1041,47 @@
       const key = document.getElementById("editStudentKey").value;
       const grNo = document.getElementById("editGrNo").value.trim();
       const name = document.getElementById("editName").value.trim();
-      const stream = document.getElementById("editStream").value.trim();
+      const streamId = document.getElementById("editStream").value;
+      const departmentId = document.getElementById("editDepartment").disabled ? "" : document.getElementById("editDepartment").value;
       const address = document.getElementById("editAddress").value.trim();
-      const city = document.getElementById("editCity").value.trim();
+      const cityId = document.getElementById("editCity").value;
+      const routeId = document.getElementById("editRoute").value;
       const phoneNo = document.getElementById("editPhoneNo").value.trim();
       const feesStatus = document.getElementById("editFeesStatus").value;
 
       // Basic validation
-      if (!grNo || !name || !stream || !address || !city || !phoneNo) {
-        alert("Please fill all fields");
+      if (!grNo || !name || !streamId || !address || !cityId || !routeId || !phoneNo) {
+        alert("Please fill all required fields");
         return;
+      }
+
+      // Get stream and city names for display
+      let streamName = "";
+      if (streams.length > 0) {
+        const streamObj = streams.find(s => s.id === streamId);
+        if (streamObj) {
+          streamName = streamObj.name;
+        }
+      }
+      
+      let cityName = "";
+      if (cities.length > 0) {
+        const cityObj = cities.find(c => c.id === cityId);
+        if (cityObj) {
+          cityName = cityObj.name;
+        }
       }
 
       const updatedData = {
         grNo: grNo,
         name: name,
-        stream: stream,
+        streamId: streamId,
+        stream: streamName,
+        departmentId: departmentId,
         address: address,
-        city: city,
+        cityId: cityId,
+        city: cityName,
+        routeId: routeId,
         phoneNo: phoneNo,
         feesStatus: feesStatus
       };
