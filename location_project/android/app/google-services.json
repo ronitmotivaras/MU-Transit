@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "686407735144",
+    "firebase_url": "https://mu-transit-86f0a-default-rtdb.firebaseio.com",
+    "project_id": "mu-transit-86f0a",
+    "storage_bucket": "mu-transit-86f0a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:686407735144:android:e7a46ff5e9c25827f0e8dd",
+        "android_client_info": {
+          "package_name": "com.example.location_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC73cWwOPFxJS9Nxfx8Dsr9hNBl0P0MMcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:686407735144:android:a660f2647af5be9ff0e8dd",
+        "android_client_info": {
+          "package_name": "com.example.mu_transit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC73cWwOPFxJS9Nxfx8Dsr9hNBl0P0MMcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
