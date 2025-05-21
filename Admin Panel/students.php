@@ -6,113 +6,7 @@
   <title>MU Transit - Student Admin Panel</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: white;
-      display: flex;
-    }
-    .sidebar {
-      width: 250px;
-      height: 100vh;
-      position: fixed;
-      background-color: #212529;
-      padding-top: 20px;
-      color: white;
-      overflow-y: auto;
-    }
-    .sidebar h3 {
-      text-align: center;
-    }
-    .sidebar a {
-      color: white;
-      padding: 12px 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-    .sidebar a:hover {
-      background-color: #343a40;
-    }
-    .content {
-      flex-grow: 1;
-      margin-left: 250px;
-      padding: 20px;
-      width: calc(100% - 250px);
-      background-color: white;
-    }
-    .btn-group {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-    }
-    .add-student-btn {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .add-student-btn:hover {
-      background-color: #218838;
-    }
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-    }
-    .modal-content {
-      background-color: white;
-      margin: 5% auto;
-      padding: 20px;
-      border-radius: 5px;
-      width: 70%;
-      max-width: 600px;
-    }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #dee2e6;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
-    .close-btn {
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    table {
-      table-layout: fixed;
-    }
-    td {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .invalid-feedback {
-      display: none;
-      color: #dc3545;
-      font-size: 14px;
-    }
-    .is-invalid {
-      border-color: #dc3545;
-    }
-    .is-invalid + .invalid-feedback {
-      display: block;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -124,7 +18,7 @@
   <div class="content">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>Students</h2>
-      <button class="add-student-btn" onclick="openAddStudentModal()">
+      <button class="add-btn" onclick="openAddStudentModal()">
         <i class="fas fa-plus"></i> Add Student
       </button>
     </div>
